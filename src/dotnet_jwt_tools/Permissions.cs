@@ -233,15 +233,15 @@ namespace dotnet_jwt_tools
         }
     
 
-    /// <summary>
-    /// Generates the permissions for a given groups an fill the group trees
-    /// </summary>
-    /// <param name="pGroups"></param>
-    /// <param name="Tee"></param>
-    /// <param name="pAdminGroup"></param>
-    /// <remarks></remarks>
-    /// <returns></returns>
-    private void _BuildPermissions(List<Jwt> pGroups, Dictionary<string, GroupTree> pTree, string pAdminGroup)
+        /// <summary>
+        /// Generates the permissions for a given groups an fill the group trees
+        /// </summary>
+        /// <param name="pGroups"></param>
+        /// <param name="pTree"></param>
+        /// <param name="pAdminGroup"></param>
+        /// <remarks></remarks>
+        /// <returns></returns>
+        private void _BuildPermissions(List<Jwt> pGroups, Dictionary<string, GroupTree> pTree, string pAdminGroup)
         {
             if (pGroups == null) return;
 

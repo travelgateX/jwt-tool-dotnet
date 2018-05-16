@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.0</TargetFramework>
+    <Authors>Mcaldentey</Authors>
+    <Company>TravelgateX</Company>
+    <Description>Tools for using IAM authorization</Description>
+    <RepositoryUrl>https://github.com/travelgateX/jwt-tool-dotnet</RepositoryUrl>
+    <PackageTags>Jwt Tools</PackageTags>
+    <PackageId>DotnetJwtTools</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
