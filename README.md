@@ -5,8 +5,6 @@ https://github.com/dotnet/designs/issues/2
 
 # How to use the Tool
 
-The first step is to import the Nuget in your project.
-
 To use the tool, you'll need some data:
 - The IAM Bearer. 
 - The Url of the Auth0 of your company.
