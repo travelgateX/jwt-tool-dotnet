@@ -12,7 +12,7 @@ namespace dotnet_jwt_tools
         public string ClaimIam { get; set; }
         public string ClaimMemberId { get; set; }
 
-        public UserConfig(string pAuthUrl, string pCertificate, string pClaimUrl, string pClaimIam, string pClaimMemberId)
+        public UserConfig (string pAuthUrl, string pCertificate, string pClaimUrl, string pClaimIam, string pClaimMemberId)
         {
             this.ValidationAuthUrl = pAuthUrl;
             this.ValidationPublicKey = pCertificate;

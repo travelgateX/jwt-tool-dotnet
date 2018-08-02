@@ -3,72 +3,9 @@ using System;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
-using System.Linq;
 
 namespace dotnet_jwt_tools
-{
-    // --------------------- DATA STRUCTURE DEFINITION --------------------- //
-    #region data structure
-
-    [JsonObject]
-    public struct Jwt
-    {
-        //Group Code
-        public string c { get; set; }
-        //Group Descendants
-        public List<Jwt> g { get; set; }
-        //Group Type
-        public string t { get; set; }
-        //Group Permissions
-        public Dictionary<string, Dictionary<string, List<string>>> p { get; set; }
-        //Group Additional
-        public object a { get; set; }
-    }
-
-    [JsonObject]
-    public struct PermissionTable
-    {
-        // Product --> Object --> Permission --> Groups ... DataApi -> Comission -> read, Update -> Smy, Mgr 
-        public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> Permissions { get; set; }
-        public bool IsAdmin { get; set; }
-        public string Bearer { get; set; }
-        public Dictionary<string, GroupTree> Groups { get; set; }
-        public string MemberId { get; set; }
-        public bool IsError { get; set; }
-        public string ErrorMessage { get; set; }
-    }
-
-    [JsonObject]
-    public struct GroupTree
-    {
-        public string GroupType { get; set; }
-        public Dictionary<string, GroupTree> Groups { get; set; }
-    }
-
-    public struct _Permissions
-    {
-        public bool Update { get; set; }
-        public bool Create { get; set; }
-        public bool Delete { get; set; }
-        public bool Read { get; set; }
-        public bool Enabled { get; set; }
-        public string OtherPermissions { get; set; }
-
-        public _Permissions(bool status)
-        {
-            Update = status;
-            Create = status;
-            Delete = status;
-            Read = status;
-            Enabled = status;
-            OtherPermissions = string.Empty;
-        }
-    }
-
-    #endregion
-
-    // --------------------- MAIN FUNCTIONALITY ---------------------------- //
+{    
     public class JwtTools
     {        
         //---------- BASIC PERMISSIONS -----------//
@@ -84,79 +21,60 @@ namespace dotnet_jwt_tools
         // -------------------- Permissions --------------------
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> GetPermissions()
         {
-            return this._PT.Permissions;
+            return this._PT?.Permissions;
         }
 
         public void SetBearer(Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> pPermissions)
         {
-            this._PT.Permissions = pPermissions;
+            if (_PT != null) this._PT.Permissions = pPermissions;            
         }
 
         // -------------------- Is Admin ------------------------
         public bool GetIsAdmin()
         {
+            if (_PT == null) return false;
             return this._PT.IsAdmin;
         }
 
         public void SetIsAdmin(bool pIsAdmin)
         {
-            this._PT.IsAdmin = pIsAdmin;
+            if (_PT != null) this._PT.IsAdmin = pIsAdmin;            
         }
         // -------------------- Bearer ---------------------------
         public string GetBearer()
         {
-            return this._PT.Bearer;
+            return this._PT?.Bearer;
         }
 
-        public void SetBearer(string bearer)
+        public void SetBearer(string pBearer)
         {
-            this._PT.Bearer = bearer;
+            if (_PT != null) this._PT.Bearer = pBearer;
         }
         // -------------------- Groups ---------------------------
         public Dictionary<string, GroupTree> GetGroups()
         {
-            return this._PT.Groups;
+            return this._PT?.Groups;
         }
 
         public void SetGroups(Dictionary<string, GroupTree> pGroups)
         {
-            this._PT.Groups = pGroups;
+            if (_PT != null) this._PT.Groups = pGroups;
         }
         // -------------------- Member ID -------------------------
         public string GetMemberID()
         {
-            return this._PT.MemberId;
+            return this._PT?.MemberId;
         }
 
         public void SetMemberID(string pMemberId)
         {
-            this._PT.MemberId = pMemberId;
-        }
-        // -------------------- Error -------------------------
-        public bool IsError()
-        {
-            return this._PT.IsError;
-        }
-
-        public void SetError(bool pError)
-        {
-            this._PT.IsError = pError;
-        }
-        // -------------------- Error Code -------------------------
-        public string GetErrorMessage()
-        {
-            return this._PT.ErrorMessage;
-        }
-
-        public void SetErrorMessage(string pMessage)
-        {
-            this._PT.ErrorMessage = pMessage;
+            if (_PT != null) this._PT.MemberId = pMemberId;
         }
         #endregion
 
-        public JwtTools(string pBearer, string pAdminGroup, UserConfig config)
+        public JwtTools(string pBearer, string pAdminGroup, UserConfig pConfig)
         {
-            this._NewPermissionTable(pBearer, pAdminGroup, config);
+            this._NewPermissionTable(pBearer, pAdminGroup, pConfig);
         }
 
         /// <summary>
@@ -166,72 +84,85 @@ namespace dotnet_jwt_tools
         /// <param name="pAdminGroup"></param>
         /// <remarks></remarks>
         /// <returns></returns>
-        private void _NewPermissionTable(string pBearer, string pAdminGroup, UserConfig config)
+        private void _NewPermissionTable(string pBearer, string pAdminGroup, UserConfig pConfig)
         {            
             try
             {
-                List<Claim> claims = validateJwtToken(pBearer, config);
+                //List<Claim> claims = _ValidateJwtToken(pBearer, config);
+                Tuple<string, string> iamMemberId = _GetIamAndMemberId(pBearer, pConfig);
 
-                if (claims != null)
+                if (!string.IsNullOrEmpty(iamMemberId.Item1))
                 {
-                    string strJwt = claims.Find(x => x.Type.Equals($"{config.ClaimUrl}{config.ClaimIam}")).Value;
-                    string strMemberId = claims.Find(x => x.Type.Equals($"{config.ClaimUrl}{config.ClaimMemberId}")).Value;
+                    string strJwt = iamMemberId.Item1;
+                    string strMemberId = iamMemberId.Item2;
 
                     Jwt jwt = JsonConvert.DeserializeObject<Jwt>(strJwt);
-
-
                     this._PT = new PermissionTable();
                     this._PT.Bearer = pBearer;
                     this._PT.MemberId = strMemberId;
                     this._PT.IsAdmin = false;
-                    this._PT.IsError = false;
                     this._PT.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>();
                     _BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
                 }
-                else
-                {
-                    this._PT.IsError = true;
-                    this._PT.ErrorMessage = "Error Validating Bearer";
-                }
             }
-            catch (Exception e )
+            catch (Exception e)
             {
-                this._PT.IsError = true;
-                this._PT.ErrorMessage = string.Concat("Unexpected Error: ", e.Message);             
+                this._PT = null;
             }
         }
 
-        private static List<Claim> validateJwtToken(string jwt, UserConfig config)
+
+        #region JWT Validation
+        //private static List<Claim> _ValidateJwtToken(string jwt, UserConfig config)
+        //{
+        //    var certificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(System.Text.Encoding.ASCII.GetBytes(config.ValidationPublicKey));
+        //    TokenValidationParameters validationParameters =
+        //        new TokenValidationParameters
+        //        {
+        //            ValidateIssuer = false,
+        //            ValidateIssuerSigningKey = false,
+        //            ValidateAudience = false,
+        //            ValidateActor = false,
+        //            ValidateLifetime = false,
+        //            RequireExpirationTime = false,
+        //            RequireSignedTokens = false
+        //        };
+
+        //    SecurityToken validatedToken;
+        //    JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+
+        //    ClaimsPrincipal ret = handler.ValidateToken(jwt.Split(' ').Last(), validationParameters, out validatedToken);
+
+        //    if (ret != null && ret.Identities.Count() > 0 && ret.Identities.First().IsAuthenticated && ret.Identities.First().Claims.Count() > 0)
+        //    {
+        //        return (List<Claim>)ret.Identities.First().Claims;
+        //    }
+        //    else
+        //    {
+        //        return null;
+        //    }
+        //} 
+        #endregion
+
+        //Return the IAM and MemberID claims value
+        private static Tuple<string, string> _GetIamAndMemberId(string pJwt, UserConfig pConfig)
         {
-            var certificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(System.Text.Encoding.ASCII.GetBytes(config.ValidationPublicKey));
-            TokenValidationParameters validationParameters =
-                new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = config.ValidationAuthUrl,
-                    ValidateIssuerSigningKey = true,
-                    ValidateAudience = false,
-                    ValidateActor = false,
-                    ValidateLifetime = false,
-                    RequireExpirationTime = false,
-                    RequireSignedTokens = false,
-                    IssuerSigningKey = new X509SecurityKey(certificate),
-                    IssuerSigningKeyResolver = (string token, SecurityToken securityToken, string kid, TokenValidationParameters vp) => new List<X509SecurityKey> { new X509SecurityKey(certificate) }
-                };
-            SecurityToken validatedToken;
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            ClaimsPrincipal ret = handler.ValidateToken(jwt.Split(' ').Last(), validationParameters, out validatedToken);
-            
-            if (ret != null && ret.Identities.Count() > 0 && ret.Identities.First().IsAuthenticated && ret.Identities.First().Claims.Count() > 0)
+            JwtSecurityToken token = (JwtSecurityToken)handler.ReadToken(pJwt);
+
+            string iam = string.Empty;
+            string memberId = string.Empty;
+
+            foreach (Claim claim in token.Claims)
             {
-                return (List<Claim>)ret.Identities.First().Claims;
+                if (claim.Type == $"{pConfig.ClaimUrl}{pConfig.ClaimIam}") iam = claim.Value;
+                else if (claim.Type == $"{pConfig.ClaimUrl}{pConfig.ClaimMemberId}") memberId = claim.Value;
+
+                if (iam != string.Empty && memberId != string.Empty) break;
             }
-            else
-            {
-                return null;
-            }
+        
+            return new Tuple<string, string>(iam, memberId);
         }
-    
 
         /// <summary>
         /// Generates the permissions for a given groups an fill the group trees
@@ -383,7 +314,6 @@ namespace dotnet_jwt_tools
                         ret.Add(p[i].ToString(), new Dictionary<string, string>());
                         break;
                 }
-
             }
 
             if (enabled) return ret;
@@ -401,10 +331,8 @@ namespace dotnet_jwt_tools
         /// <returns>A boolean meaning if the group have permission</returns>
         public bool CheckPermission(string pProduct, string pObj, string pPermission, string pGroup)
         {
-            if (this._PT.IsAdmin)
-            {
-                return true;
-            }
+            if (this._PT == null) return false;
+            if (this._PT.IsAdmin) { return true; }
             //iam --> grp --> crud1 -> xtg
             if (this._PT.Permissions != null && this._PT.Permissions.ContainsKey(pProduct) && this._PT.Permissions[pProduct].ContainsKey(pObj))
             {
