@@ -7,7 +7,10 @@ using System.Security.Claims;
 namespace dotnet_jwt_tools
 {    
     public class JwtTools
-    {        
+    {
+        public bool isError = false;
+        public string Error = null;
+
         //---------- BASIC PERMISSIONS -----------//
         private const string CNST_CREATE = "c";
         private const string CNST_UPDATE = "u";
@@ -107,6 +110,8 @@ namespace dotnet_jwt_tools
             }
             catch (Exception e)
             {
+                this.Error = e.Message;
+                this.isError = true;
                 this._PT = null;
             }
         }
