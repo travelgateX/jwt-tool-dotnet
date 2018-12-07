@@ -105,7 +105,7 @@ namespace dotnet_jwt_tools
                     this._PT.MemberId = strMemberId;
                     this._PT.IsAdmin = false;
                     this._PT.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>();
-                    _BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
+                    this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
                 }
             }
             catch (Exception e)
@@ -184,19 +184,19 @@ namespace dotnet_jwt_tools
             foreach (Jwt group in pGroups)
             {
                 //Check if the data is filled
-                if (group.c == null) return;
-                if (group.t == null) return;
+                if (group.GroupCode == null) return;
+                if (group.Type == null) return;
 
                 //Fill the tree with the data on the group
-                pTree[group.c] = new GroupTree { Groups = new Dictionary<string, GroupTree>(), GroupType = group.t };
+                pTree[group.GroupCode] = new GroupTree { Groups = new Dictionary<string, GroupTree>(), GroupType = group.Type };
 
                 //Check the Products
-                bool isAdmin = _FillPermissionsFromProducts(group.p, this._PT.Permissions, group.c, pAdminGroup);
+                bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this._PT.Permissions, group.GroupCode, pAdminGroup);
                 if (isAdmin) this._PT.IsAdmin = true;
 
                 //Call recursivity
-                Dictionary<string, GroupTree> groupTree = pTree[group.c].Groups;
-                _BuildPermissions(group.g, groupTree, pAdminGroup);
+                Dictionary<string, GroupTree> groupTree = pTree[group.GroupCode].Groups;
+                this._BuildPermissions(group.GroupDescendants, groupTree, pAdminGroup);
             }
         }
 
