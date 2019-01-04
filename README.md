@@ -17,11 +17,8 @@ The first step is to import the Nuget in your project.
 
 After that you have to create a UserConfig Object.
 
-**UserConfig** userConfig = new **UserConfig**("Auth0 Url", 
-                "Auth0 Public Key", 
-                "Claim Base URl i.e. https://xmltravelgate.com/", 
-                "IAM URI i.e. iam",
-                "MemberID URI i.e. member_id");
+**UserConfig** userConfig = new **UserConfig**("Claim Base URl i.e. https://xmltravelgate.com/", "IAM URI i.e. iam", 
+"MemberID URI i.e. member_id");
 
 The Next step is to Initialize the tool with the Bearer, the Admin Group and the UserConfig: 
 **JwtTools** jwtTools = new **JwtTools**(bearer, string.Empty, userConfig);
