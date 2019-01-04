@@ -80,6 +80,11 @@ namespace dotnet_jwt_tools
             this._NewPermissionTable(pBearer, pAdminGroup, pConfig);
         }
 
+        public JwtTools(string pBearer, UserConfig pConfig)
+        {
+            this._NewPermissionTable(pBearer, string.Empty, pConfig);
+        }
+
         /// <summary>
         /// Create the PermissionTable and saves it
         /// </summary>

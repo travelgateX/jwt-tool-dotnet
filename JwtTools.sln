@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.27428.2043
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JwtTools", "src\JwtTools\JwtTools.csproj", "{BC7F2C32-375E-4910-89A0-AE9014F880D1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "jwt_tools_UnitTest", "..\jwt_tools_UnitTest\jwt_tools_UnitTest\jwt_tools_UnitTest.csproj", "{EFA6D6AE-AB2F-44C8-A6FF-CBB7831C919A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{BC7F2C32-375E-4910-89A0-AE9014F880D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC7F2C32-375E-4910-89A0-AE9014F880D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC7F2C32-375E-4910-89A0-AE9014F880D1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EFA6D6AE-AB2F-44C8-A6FF-CBB7831C919A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EFA6D6AE-AB2F-44C8-A6FF-CBB7831C919A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EFA6D6AE-AB2F-44C8-A6FF-CBB7831C919A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EFA6D6AE-AB2F-44C8-A6FF-CBB7831C919A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
