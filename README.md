@@ -20,8 +20,8 @@ After that you have to create a UserConfig Object.
 **UserConfig** userConfig = new **UserConfig**("Claim Base URl i.e. https://xmltravelgate.com/", "IAM URI i.e. iam", 
 "MemberID URI i.e. member_id");
 
-The Next step is to Initialize the tool with the Bearer, the Admin Group and the UserConfig: 
-**JwtTools** jwtTools = new **JwtTools**(bearer, string.Empty, userConfig);
+The Next step is to Initialize the tool with the Bearer and the UserConfig: 
+**JwtTools** jwtTools = new **JwtTools**(bearer, userConfig);
 
 And now, you can use the Tool!
 
