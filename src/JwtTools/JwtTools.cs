@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace dotnet_jwt_tools
+namespace DotnetJwtTools
 {    
     public class JwtTools
     {
@@ -18,62 +18,13 @@ namespace dotnet_jwt_tools
         private const string CNST_READ = "r";
         private const string CNST_EXECUTE = "x";
 
-        private PermissionTable _PT;
+        // Product --> Object --> Permission --> Groups ... Api -> Operation -> read, Update -> Organizations..
+        public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> Permissions { get; set; }
+        public bool IsAdmin { get; set; }
+        public string Bearer { get; set; }
+        public Dictionary<string, GroupTree> Groups { get; set; }
+        public string MemberId { get; set; }
 
-        #region Setters/Getters _PT
-        // -------------------- Permissions --------------------
-        public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> GetPermissions()
-        {
-            return this._PT?.Permissions;
-        }
-
-        public void SetBearer(Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> pPermissions)
-        {
-            if (_PT != null) this._PT.Permissions = pPermissions;            
-        }
-
-        // -------------------- Is Admin ------------------------
-        public bool GetIsAdmin()
-        {
-            if (_PT == null) return false;
-            return this._PT.IsAdmin;
-        }
-
-        public void SetIsAdmin(bool pIsAdmin)
-        {
-            if (_PT != null) this._PT.IsAdmin = pIsAdmin;            
-        }
-        // -------------------- Bearer ---------------------------
-        public string GetBearer()
-        {
-            return this._PT?.Bearer;
-        }
-
-        public void SetBearer(string pBearer)
-        {
-            if (_PT != null) this._PT.Bearer = pBearer;
-        }
-        // -------------------- Groups ---------------------------
-        public Dictionary<string, GroupTree> GetGroups()
-        {
-            return this._PT?.Groups;
-        }
-
-        public void SetGroups(Dictionary<string, GroupTree> pGroups)
-        {
-            if (_PT != null) this._PT.Groups = pGroups;
-        }
-        // -------------------- Member ID -------------------------
-        public string GetMemberID()
-        {
-            return this._PT?.MemberId;
-        }
-
-        public void SetMemberID(string pMemberId)
-        {
-            if (_PT != null) this._PT.MemberId = pMemberId;
-        }
-        #endregion
 
         public JwtTools(string pBearer, string pAdminGroup, UserConfig pConfig)
         {
@@ -83,6 +34,10 @@ namespace dotnet_jwt_tools
         public JwtTools(string pBearer, UserConfig pConfig)
         {
             this._NewPermissionTable(pBearer, string.Empty, pConfig);
+        }
+
+        public JwtTools()
+        {            
         }
 
         /// <summary>
@@ -105,11 +60,11 @@ namespace dotnet_jwt_tools
                     string strMemberId = iamMemberId.Item2;
 
                     Jwt jwt = JsonConvert.DeserializeObject<Jwt>(strJwt);
-                    this._PT = new PermissionTable();
-                    this._PT.Bearer = pBearer;
-                    this._PT.MemberId = strMemberId;
-                    this._PT.IsAdmin = false;
-                    this._PT.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>();
+
+                    this.Bearer = pBearer;
+                    this.MemberId = strMemberId;
+                    this.IsAdmin = false;
+                    this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>();
                     this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
                 }
             }
@@ -117,7 +72,7 @@ namespace dotnet_jwt_tools
             {
                 this.Error = e.Message;
                 this.isError = true;
-                this._PT = null;
+                this.Permissions = null;
             }
         }
 
@@ -196,8 +151,8 @@ namespace dotnet_jwt_tools
                 pTree[group.GroupCode] = new GroupTree { Groups = new Dictionary<string, GroupTree>(), GroupType = group.Type };
 
                 //Check the Products
-                bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this._PT.Permissions, group.GroupCode, pAdminGroup);
-                if (isAdmin) this._PT.IsAdmin = true;
+                bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this.Permissions, group.GroupCode, pAdminGroup);
+                if (isAdmin) this.IsAdmin = true;
 
                 //Call recursivity
                 Dictionary<string, GroupTree> groupTree = pTree[group.GroupCode].Groups;
@@ -341,12 +296,12 @@ namespace dotnet_jwt_tools
         /// <returns>A boolean meaning if the group have permission</returns>
         public bool CheckPermission(string pProduct, string pObj, string pPermission, string pGroup)
         {
-            if (this._PT == null) return false;
-            if (this._PT.IsAdmin) { return true; }
+            if (this.Permissions == null) return false;
+            if (this.IsAdmin) { return true; }
             //iam --> grp --> crud1 -> xtg
-            if (this._PT.Permissions != null && this._PT.Permissions.ContainsKey(pProduct) && this._PT.Permissions[pProduct].ContainsKey(pObj))
+            if (this.Permissions.ContainsKey(pProduct) && this.Permissions[pProduct].ContainsKey(pObj))
             {
-                foreach (KeyValuePair<string, Dictionary<string,string>> perms in this._PT.Permissions[pProduct][pObj])
+                foreach (KeyValuePair<string, Dictionary<string,string>> perms in this.Permissions[pProduct][pObj])
                 {
                     if (perms.Key.Equals(pPermission))
                     {
@@ -359,6 +314,42 @@ namespace dotnet_jwt_tools
             }
 
             return false;
+        }
+
+
+
+        /// <summary>
+        /// Add Permission to a group for a product and object
+        /// </summary>
+        /// <param name="pProduct"></param>
+        /// <param name="pObj"></param>
+        /// <param name="pPermission"></param>
+        /// <param name="pGroup"></param>
+        /// <remarks></remarks>
+        /// <returns>A boolean meaning if the group have permission</returns>
+        public bool AddPermission(string pProduct, string pObj, string pPermission, string pGroup)
+        {
+            //--- Check if Permissions is not null ----------------
+            if (this.Permissions == null)
+                this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>();
+
+            //--- Check if we have the product -----------
+            if (!this.Permissions.ContainsKey(pProduct))
+                this.Permissions.Add(pProduct, new Dictionary<string, Dictionary<string, Dictionary<string, string>>>());
+
+            //--- Check if we have the object ------------
+            if (!this.Permissions[pProduct].ContainsKey(pObj))
+                this.Permissions[pProduct].Add(pObj, new Dictionary<string, Dictionary<string, string>>());
+
+            //--- Check if we have the permission --------
+            if (!this.Permissions[pProduct][pObj].ContainsKey(pPermission))
+                this.Permissions[pProduct][pObj].Add(pPermission, new Dictionary<string, string>());
+
+            //--- Check if we have the group -------------
+            if (!this.Permissions[pProduct][pObj][pPermission].ContainsKey(pGroup))
+                this.Permissions[pProduct][pObj][pPermission].Add(pGroup, string.Empty);
+
+            return true;
         }
     }
 }

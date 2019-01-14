@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace dotnet_jwt_tools
+namespace DotnetJwtTools
 {
     public class UserConfig
     {
