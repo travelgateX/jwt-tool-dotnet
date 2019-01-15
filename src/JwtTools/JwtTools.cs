@@ -10,6 +10,8 @@ namespace DotnetJwtTools
     {
         public bool isError = false;
         public string Error = null;
+        private const string CNST_ALL = "all";
+        private const string CNST_CRUD = "crud";
 
         //---------- BASIC PERMISSIONS -----------//
         private const string CNST_CREATE = "c";
@@ -298,7 +300,8 @@ namespace DotnetJwtTools
         {
             if (this.Permissions == null) return false;
             if (this.IsAdmin) { return true; }
-            //iam --> grp --> crud1 -> xtg
+            
+            //Check for concrete permission
             if (this.Permissions.ContainsKey(pProduct) && this.Permissions[pProduct].ContainsKey(pObj))
             {
                 foreach (KeyValuePair<string, Dictionary<string,string>> perms in this.Permissions[pProduct][pObj])
@@ -308,6 +311,60 @@ namespace DotnetJwtTools
                         foreach (KeyValuePair<string, string> _group in perms.Value)
                         {
                             if (pGroup.Equals(_group.Key)) return true;
+                        }
+                    }
+                }
+            }
+
+            //Check for all 
+            if (this.Permissions.ContainsKey(CNST_ALL))
+            {
+                if (this.Permissions[CNST_ALL].ContainsKey(CNST_ALL))
+                {
+                    if (this.Permissions[CNST_ALL][CNST_ALL].ContainsKey(pPermission))
+                    {
+                        if (this.Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(pGroup)
+                            || this.Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        //Check if we have major permission
+                        foreach (var permission in this.Permissions[CNST_ALL][CNST_ALL])
+                        {
+                            if (permission.Key.StartsWith(CNST_CRUD))
+                            {
+                                if (permission.Value.ContainsKey(CNST_ALL) || 
+                                    permission.Value.ContainsKey(pGroup)) return true;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (this.Permissions[CNST_ALL].ContainsKey(pObj))
+                    {
+                        if (this.Permissions[CNST_ALL][pObj].ContainsKey(pPermission))
+                        {
+                            if (this.Permissions[CNST_ALL][pObj][pPermission].ContainsKey(pGroup)
+                            || this.Permissions[CNST_ALL][pObj][pPermission].ContainsKey(CNST_ALL))
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            //Check if we have major permission
+                            foreach (var permission in this.Permissions[CNST_ALL][pObj])
+                            {
+                                if (permission.Key.StartsWith(CNST_CRUD))
+                                {
+                                    if (permission.Value.ContainsKey(CNST_ALL) || 
+                                        permission.Value.ContainsKey(pGroup)) return true;
+                                }
+                            }
                         }
                     }
                 }
