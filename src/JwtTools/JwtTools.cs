@@ -27,6 +27,9 @@ namespace DotnetJwtTools
         public Dictionary<string, GroupTree> Groups { get; set; }
         public string MemberId { get; set; }
 
+        //To Add some strings, in the CheckPermission with 5 parameters
+        //to last parameter has to be in this hashset
+        public HashSet<string> _Operations { get; set; }
 
         public JwtTools(string pBearer, string pAdminGroup, UserConfig pConfig)
         {
@@ -40,6 +43,11 @@ namespace DotnetJwtTools
 
         public JwtTools()
         {            
+        }
+
+        public JwtTools(IEnumerable<string> pOperations)
+        {
+            this._Operations = new HashSet<string>(pOperations);
         }
 
         /// <summary>
@@ -414,6 +422,22 @@ namespace DotnetJwtTools
             return false;
         }
 
+        /// <summary>
+        /// Check if a group have a permision for a product and object, and an Operation
+        /// </summary>
+        /// <param name="pProduct"></param>
+        /// <param name="pObj"></param>
+        /// <param name="pPermission"></param>
+        /// <param name="pGroup"></param>
+        /// <param name="pOperation"></param>
+        /// <remarks></remarks>
+        /// <returns>A boolean meaning if the group have permission</returns>
+        public bool CheckPermission(string pProduct, string pObj, string pPermission, string pGroup, string pOperation)
+        {
+            if (!this._Operations.Contains(pOperation)) return false;
+
+            return this.CheckPermission(pProduct, pObj, pPermission, pGroup);
+        }
 
 
         /// <summary>
