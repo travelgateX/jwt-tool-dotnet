@@ -301,28 +301,67 @@ namespace DotnetJwtTools
             if (this.Permissions == null) return false;
             if (this.IsAdmin) { return true; }
             
-            //Check for concrete permission
-            if (this.Permissions.ContainsKey(pProduct) && this.Permissions[pProduct].ContainsKey(pObj))
+            //Check for concrete product
+            if (this.Permissions.ContainsKey(pProduct))
             {
-                foreach (KeyValuePair<string, Dictionary<string,string>> perms in this.Permissions[pProduct][pObj])
+                //Check for all object
+                if (this.Permissions[pProduct].ContainsKey(CNST_ALL))
                 {
-                    if (perms.Key.Equals(pPermission))
+                    if (this.Permissions[pProduct][CNST_ALL].ContainsKey(pPermission))
                     {
-                        foreach (KeyValuePair<string, string> _group in perms.Value)
+                        //Check if have the group
+                        if (this.Permissions[pProduct][CNST_ALL][pPermission].ContainsKey(pGroup)
+                            || this.Permissions[pProduct][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
                         {
-                            if (pGroup.Equals(_group.Key)) return true;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        //Check if we have major permission
+                        foreach (var permission in this.Permissions[pProduct][CNST_ALL])
+                        {
+                            //Check if we have the group
+                            if (permission.Key.StartsWith(CNST_CRUD))
+                            {
+                                if (permission.Value.ContainsKey(CNST_ALL) ||
+                                    permission.Value.ContainsKey(pGroup)) return true;
+                            }
+                        }
+                    }
+
+                }
+
+                //Check for concrete object
+                if (this.Permissions[pProduct].ContainsKey(pObj))
+                {
+                    foreach (KeyValuePair<string, Dictionary<string, string>> perms in this.Permissions[pProduct][pObj])
+                    {
+                        //Check for permission
+                        if (perms.Key.Equals(pPermission) || perms.Key.Equals(CNST_CRUD))
+                        {
+                            //Check if we have the group or all the groups
+                            if (perms.Value.Equals(CNST_ALL) || perms.Value.ContainsKey(pGroup))
+                            {
+                                return true;
+                            }
+                            
                         }
                     }
                 }
+                
             }
 
-            //Check for all 
+            //Check for all product
             if (this.Permissions.ContainsKey(CNST_ALL))
             {
+                //Check for all object
                 if (this.Permissions[CNST_ALL].ContainsKey(CNST_ALL))
                 {
+                    //Check for all permission
                     if (this.Permissions[CNST_ALL][CNST_ALL].ContainsKey(pPermission))
                     {
+                        //Check if have the group
                         if (this.Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(pGroup)
                             || this.Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
                         {
@@ -334,6 +373,7 @@ namespace DotnetJwtTools
                         //Check if we have major permission
                         foreach (var permission in this.Permissions[CNST_ALL][CNST_ALL])
                         {
+                            //Check if we have the group
                             if (permission.Key.StartsWith(CNST_CRUD))
                             {
                                 if (permission.Value.ContainsKey(CNST_ALL) || 
@@ -342,6 +382,7 @@ namespace DotnetJwtTools
                         }
                     }
                 }
+                //Check for concrete object
                 else
                 {
                     if (this.Permissions[CNST_ALL].ContainsKey(pObj))
