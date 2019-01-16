@@ -12,6 +12,7 @@ namespace DotnetJwtTools
         public string Error = null;
         private const string CNST_ALL = "all";
         private const string CNST_CRUD = "crud";
+        private const string CNST_ADMIN = "a";
 
         //---------- BASIC PERMISSIONS -----------//
         private const string CNST_CREATE = "c";
@@ -341,7 +342,7 @@ namespace DotnetJwtTools
                     foreach (var permission in this.Permissions[pProduct][CNST_ALL])
                     {
                         //Check if we have teh group
-                        if (permission.Key.StartsWith(CNST_CRUD))
+                        if (permission.Key.StartsWith(CNST_CRUD) || permission.Key.Equals(CNST_ADMIN))
                         {
                             //Check if we have the group
                             if (permission.Value.ContainsKey(pGroup))
@@ -374,14 +375,14 @@ namespace DotnetJwtTools
 
                 //Check for concrete object
                 if (this.Permissions[pProduct].ContainsKey(pObj))
-                {
+                {                    
                     if (this.Permissions[pProduct][pObj].ContainsKey(pPermission))
                     {
                         if (this.Permissions[pProduct][pObj][pPermission].ContainsKey(pGroup))
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][pPermission][pGroup] != null && 
+                            if (this.Permissions[pProduct][pObj][pPermission][pGroup] != null &&
                                 this.Permissions[pProduct][pObj][pPermission][pGroup].Contains(pOperation))
                             {
                                 return true;
@@ -403,7 +404,7 @@ namespace DotnetJwtTools
                     }
                     else if (this.Permissions[pProduct][pObj].ContainsKey(CNST_CRUD))
                     {
-                        if (this.Permissions[pProduct][pObj][CNST_CRUD].ContainsKey(pGroup))                            
+                        if (this.Permissions[pProduct][pObj][CNST_CRUD].ContainsKey(pGroup))
                         {
                             if (!checkOperation) return true;
 
@@ -425,8 +426,31 @@ namespace DotnetJwtTools
                             }
                         }
                     }
+                    else if (this.Permissions[pProduct][pObj].ContainsKey(CNST_ADMIN))
+                    {
+                        if (this.Permissions[pProduct][pObj][CNST_ADMIN].ContainsKey(pGroup))
+                        {
+                            if (!checkOperation) return true;
+
+                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][pGroup] != null &&
+                                this.Permissions[pProduct][pObj][CNST_ADMIN][pGroup].Contains(pOperation))
+                            {
+                                return true;
+                            }
+                        }
+
+                        if (this.Permissions[pProduct][pObj][CNST_ADMIN].ContainsKey(CNST_ALL))
+                        {
+                            if (!checkOperation) return true;
+
+                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL] != null &&
+                                this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL].Contains(pOperation))
+                            {
+                                return true;
+                            }
+                        }
+                    }
                 }
-                
             }
 
             //Check for all product
@@ -466,7 +490,7 @@ namespace DotnetJwtTools
                     //Check if we have major permission
                     foreach (var permission in this.Permissions[CNST_ALL][CNST_ALL])
                     {                            
-                        if (permission.Key.StartsWith(CNST_CRUD))
+                        if (permission.Key.StartsWith(CNST_CRUD) || permission.Key.Equals(CNST_ADMIN))
                         {
                             //Check if we have the group
                             if (permission.Value.ContainsKey(pGroup))
@@ -530,7 +554,7 @@ namespace DotnetJwtTools
                         //Check if we have major permission
                         foreach (var permission in this.Permissions[CNST_ALL][pObj])
                         {
-                            if (permission.Key.StartsWith(CNST_CRUD))
+                            if (permission.Key.StartsWith(CNST_CRUD) || permission.Key.Equals(CNST_ADMIN))
                             {
                                 //Check if we have the group
                                 if (permission.Value.ContainsKey(pGroup))
