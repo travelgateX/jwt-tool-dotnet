@@ -322,6 +322,11 @@ namespace DotnetJwtTools
                             {
                                 if (this.Permissions[pProduct][CNST_ALL][pPermission][pGroup].Contains(pOperation)) return true;
                             }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
+                            {
+                                return true;
+                            }
                         }
 
                         //Check if we have all the groups
@@ -333,6 +338,11 @@ namespace DotnetJwtTools
                             if (this.Permissions[pProduct][CNST_ALL][pPermission][CNST_ALL] != null)
                             {
                                 if (this.Permissions[pProduct][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
+                            {
+                                return true;
                             }
                         }
                     }
@@ -354,6 +364,11 @@ namespace DotnetJwtTools
                                 {
                                     if (this.Permissions[pProduct][CNST_ALL][permission.Key][pGroup].Contains(pOperation)) return true;
                                 }
+                                //If the hashset of operation is null, we asume we don't filter by operation
+                                else
+                                {
+                                    return true;
+                                }
                             }
 
                             //Check if we have all
@@ -365,6 +380,11 @@ namespace DotnetJwtTools
                                 if (this.Permissions[pProduct][CNST_ALL][permission.Key][CNST_ALL] != null)
                                 {
                                     if (this.Permissions[pProduct][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation)) return true;
+                                }
+                                //If the hashset of operation is null, we asume we don't filter by operation
+                                else
+                                {
+                                    return true;
                                 }
                             }
                         }
@@ -382,8 +402,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][pPermission][pGroup] != null &&
-                                this.Permissions[pProduct][pObj][pPermission][pGroup].Contains(pOperation))
+                            if (this.Permissions[pProduct][pObj][pPermission][pGroup] != null)
+                            {
+                                if (this.Permissions[pProduct][pObj][pPermission][pGroup].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -394,8 +418,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][pPermission][CNST_ALL] != null &&
-                                this.Permissions[pProduct][pObj][pPermission][CNST_ALL].Contains(pOperation))
+                            if (this.Permissions[pProduct][pObj][pPermission][CNST_ALL] != null)                                
+                            {
+                                if (this.Permissions[pProduct][pObj][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -408,8 +436,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][CNST_CRUD][pGroup] != null &&
-                                this.Permissions[pProduct][pObj][CNST_CRUD][pGroup].Contains(pOperation))
+                            if (this.Permissions[pProduct][pObj][CNST_CRUD][pGroup] != null)                                
+                            {
+                                if (this.Permissions[pProduct][pObj][CNST_CRUD][pGroup].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -419,8 +451,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL] != null &&
-                                this.Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL].Contains(pOperation))
+                            if (this.Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL] != null)
+                            {
+                                if (this.Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -432,8 +468,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][pGroup] != null &&
-                                this.Permissions[pProduct][pObj][CNST_ADMIN][pGroup].Contains(pOperation))
+                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][pGroup] != null)
+                            {
+                                if (this.Permissions[pProduct][pObj][CNST_ADMIN][pGroup].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -443,8 +483,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL] != null &&
-                                this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL].Contains(pOperation))
+                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL] != null)
+                            {
+                                if (this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -467,8 +511,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][pGroup] != null &&
-                                this.Permissions[CNST_ALL][CNST_ALL][pPermission][pGroup].Contains(pOperation))
+                            if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][pGroup] != null)
+                            {
+                                if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][pGroup].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -479,8 +527,12 @@ namespace DotnetJwtTools
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL] != null &&
-                                this.Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation))
+                            if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL] != null)
+                            {
+                                 if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                            }
+                            //If the hashset of operation is null, we asume we don't filter by operation
+                            else
                             {
                                 return true;
                             }
@@ -497,8 +549,12 @@ namespace DotnetJwtTools
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][pGroup] != null &&
-                                    this.Permissions[CNST_ALL][CNST_ALL][permission.Key][pGroup].Contains(pOperation))
+                                if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][pGroup] != null)
+                                {
+                                    if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][pGroup].Contains(pOperation)) return true;
+                                }
+                                //If the hashset of operation is null, we asume we don't filter by operation
+                                else
                                 {
                                     return true;
                                 }
@@ -509,8 +565,12 @@ namespace DotnetJwtTools
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL] != null &&
-                                    this.Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation))
+                                if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL] != null)
+                                {
+                                    if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation)) return true;
+                                }
+                                //If the hashset of operation is null, we asume we don't filter by operation
+                                else
                                 {
                                     return true;
                                 }
@@ -531,8 +591,12 @@ namespace DotnetJwtTools
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][pObj][pPermission][pGroup] != null &&
-                                    this.Permissions[CNST_ALL][pObj][pPermission][pGroup].Contains(pOperation))
+                                if (this.Permissions[CNST_ALL][pObj][pPermission][pGroup] != null)
+                                {
+                                    if (this.Permissions[CNST_ALL][pObj][pPermission][pGroup].Contains(pOperation)) return true;
+                                }
+                                //If the hashset of operation is null, we asume we don't filter by operation
+                                else
                                 {
                                     return true;
                                 }
@@ -543,8 +607,12 @@ namespace DotnetJwtTools
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][pObj][pPermission][CNST_ALL] != null &&
-                                    this.Permissions[CNST_ALL][pObj][pPermission][CNST_ALL].Contains(pOperation))
+                                if (this.Permissions[CNST_ALL][pObj][pPermission][CNST_ALL] != null)
+                                {
+                                    if (this.Permissions[CNST_ALL][pObj][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                                }
+                                //If the hashset of operation is null, we asume we don't filter by operation
+                                else
                                 {
                                     return true;
                                 }
@@ -561,8 +629,12 @@ namespace DotnetJwtTools
                                 {
                                     if (!checkOperation) return true;
 
-                                    if (this.Permissions[CNST_ALL][pObj][permission.Key][pGroup] != null &&
-                                        this.Permissions[CNST_ALL][pObj][permission.Key][pGroup].Contains(pOperation))
+                                    if (this.Permissions[CNST_ALL][pObj][permission.Key][pGroup] != null)
+                                    {
+                                        if (this.Permissions[CNST_ALL][pObj][permission.Key][pGroup].Contains(pOperation)) return true;
+                                    }
+                                    //If the hashset of operation is null, we asume we don't filter by operation
+                                    else
                                     {
                                         return true;
                                     }
@@ -573,8 +645,12 @@ namespace DotnetJwtTools
                                 {
                                     if (!checkOperation) return true;
 
-                                    if (this.Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL] != null &&
-                                        this.Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL].Contains(pOperation))
+                                    if (this.Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL] != null)
+                                    {
+                                        if (this.Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL].Contains(pOperation)) return true;
+                                    }
+                                    //If the hashset of operation is null, we asume we don't filter by operation
+                                    else
                                     {
                                         return true;
                                     }
