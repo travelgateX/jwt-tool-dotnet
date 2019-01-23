@@ -22,6 +22,7 @@ jwtTools.CheckPermission("Api", "Product", "Permission", "Orgenization");
 bool ok = jwtTools.CheckPermission("iam", "grp", "r", "xtg");
 
 **Add permissions:**
+
 jwt.AddPermission("iam", "grp", "r", "tgx");
 
 **Add Operations to an existing permission** (or create a new one with this operation).
