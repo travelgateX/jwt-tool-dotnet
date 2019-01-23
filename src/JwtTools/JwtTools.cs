@@ -26,16 +26,16 @@ namespace DotnetJwtTools
         public bool IsAdmin { get; set; }
         public string Bearer { get; set; }
         public Dictionary<string, GroupTree> Groups { get; set; }
-        public string MemberId { get; set; }
+        //public string MemberId { get; set; }
 
-        public JwtTools(string pBearer, string pAdminGroup, UserConfig pConfig)
+        public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName)
         {
-            this._NewPermissionTable(pBearer, pAdminGroup, pConfig);
+            this._NewPermissionTable(pBearer, pAdminGroup, pJwtIamName);
         }
 
-        public JwtTools(string pBearer, UserConfig pConfig)
+        public JwtTools(string pBearer, string pJwtIamName)
         {
-            this._NewPermissionTable(pBearer, string.Empty, pConfig);
+            this._NewPermissionTable(pBearer, string.Empty, pJwtIamName);
         }
 
         public JwtTools()
@@ -49,22 +49,19 @@ namespace DotnetJwtTools
         /// <param name="pAdminGroup"></param>
         /// <remarks></remarks>
         /// <returns></returns>
-        private void _NewPermissionTable(string pBearer, string pAdminGroup, UserConfig pConfig)
+        private void _NewPermissionTable(string pBearer, string pAdminGroup, string pJwtIamName)
         {            
             try
             {
                 //List<Claim> claims = _ValidateJwtToken(pBearer, config);
-                Tuple<string, string> iamMemberId = _GetIamAndMemberId(pBearer, pConfig);
+                string strJwt = _ExtractIam(pBearer, pJwtIamName);
 
-                if (!string.IsNullOrEmpty(iamMemberId.Item1))
-                {
-                    string strJwt = iamMemberId.Item1;
-                    string strMemberId = iamMemberId.Item2;
-
+                if (!string.IsNullOrEmpty(strJwt))
+                {   
                     Jwt jwt = JsonConvert.DeserializeObject<Jwt>(strJwt);
 
                     this.Bearer = pBearer;
-                    this.MemberId = strMemberId;
+                    //this.MemberId = strMemberId;
                     this.IsAdmin = false;
                     this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
                     this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
@@ -112,23 +109,17 @@ namespace DotnetJwtTools
         #endregion
 
         //Return the IAM and MemberID claims value
-        private static Tuple<string, string> _GetIamAndMemberId(string pJwt, UserConfig pConfig)
+        private static string _ExtractIam(string pJwt, string pJwtIamName)
         {
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             JwtSecurityToken token = (JwtSecurityToken)handler.ReadToken(pJwt);
 
-            string iam = string.Empty;
-            string memberId = string.Empty;
-
             foreach (Claim claim in token.Claims)
             {
-                if (claim.Type == $"{pConfig.ClaimUrl}{pConfig.ClaimIam}") iam = claim.Value;
-                else if (claim.Type == $"{pConfig.ClaimUrl}{pConfig.ClaimMemberId}") memberId = claim.Value;
-
-                if (iam != string.Empty && memberId != string.Empty) break;
+                if (claim.Type == pJwtIamName) return claim.Value;
             }
-        
-            return new Tuple<string, string>(iam, memberId);
+
+            return string.Empty;
         }
 
         /// <summary>
