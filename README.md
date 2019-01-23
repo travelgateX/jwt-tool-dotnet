@@ -11,21 +11,23 @@ To use the tool, you'll need some data:
 
 The first step is to import the Nuget in your project.
 
+Now we create the **JwtTools** object.
 **JwtTools** jwtTools = new **JwtTools**(bearer, "Iam path, in example https://travelgatex.com/iam");
 
-And now, you can use the Tool with this parameters.
+And now, you can use the Tool.
+
+**Check Permissions**
 
 jwtTools.CheckPermission("Api", "Product", "Permission", "Orgenization");
+bool ok = jwtTools.CheckPermission("iam", "grp", "r", "xtg");
 
-**bool** ok = jwtTools.CheckPermission("iam", "grp", "r", "xtg");
-
-You can also add permissions:
+**Add permissions:**
 jwt.AddPermission("iam", "grp", "r", "tgx");
 
-Or Add Operations to an existing permission (or create a new one with this operation).
+**Add Operations to an existing permission** (or create a new one with this operation).
 
 jwt.AddPermission("iam", "grp", "r", "tgx", "ReadCommission");
 
-And check the permission with the operation:
+**Check the permission with the operation:**
 
-**bool** ok = jwtTools.CheckPermission("iam", "grp", "r", "tgx", "ReadCommission");
+bool ok = jwtTools.CheckPermission("iam", "grp", "r", "tgx", "ReadCommission");
