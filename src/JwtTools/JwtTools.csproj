@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.0</TargetFramework>
@@ -7,7 +7,7 @@
     <Description>Tools for using IAM authorization</Description>
     <RepositoryUrl>https://github.com/travelgateX/jwt-tool-dotnet</RepositoryUrl>
     <PackageTags>Jwt Tools</PackageTags>
-    <PackageId>DotnetJwtTools</PackageId>
+    <PackageId>JwtTools</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
