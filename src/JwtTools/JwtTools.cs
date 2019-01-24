@@ -24,7 +24,7 @@ namespace DotnetJwtTools
         // Product --> Object --> Permission --> Groups ... Api -> Operation -> read, Update -> Organizations..
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> Permissions { get; set; }
         public bool IsAdmin { get; set; }
-        public string Bearer { get; set; }
+        //public string Bearer { get; set; }
         public Dictionary<string, GroupTree> Groups { get; set; }
         //public string MemberId { get; set; }
 
@@ -60,7 +60,7 @@ namespace DotnetJwtTools
                 {   
                     Jwt jwt = JsonConvert.DeserializeObject<Jwt>(strJwt);
 
-                    this.Bearer = pBearer;
+                    //this.Bearer = pBearer;
                     //this.MemberId = strMemberId;
                     this.IsAdmin = false;
                     this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
