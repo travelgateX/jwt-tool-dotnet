@@ -47,6 +47,7 @@ namespace DotnetJwtTools
         /// </summary>
         /// <param name="pBearer"></param>
         /// <param name="pAdminGroup"></param>
+        /// <param name="pJwtIamName"></param>
         /// <remarks></remarks>
         /// <returns></returns>
         private void _NewPermissionTable(string pBearer, string pAdminGroup, string pJwtIamName)
