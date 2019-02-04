@@ -24,18 +24,16 @@ namespace DotnetJwtTools
         // Product --> Object --> Permission --> Groups ... Api -> Operation -> read, Update -> Organizations..
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> Permissions { get; set; }
         public bool IsAdmin { get; set; }
-        //public string Bearer { get; set; }
-        public Dictionary<string, GroupTree> Groups { get; set; }
-        //public string MemberId { get; set; }
+        public HashSet<string> ExtraNode { get; set; }
 
-        public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName)
+        public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath = null)
         {
-            this._NewPermissionTable(pBearer, pAdminGroup, pJwtIamName);
+            this._NewPermissionTable(pBearer, pAdminGroup, pJwtIamName, pExtraValuePath);
         }
 
-        public JwtTools(string pBearer, string pJwtIamName)
+        public JwtTools(string pBearer, string pJwtIamName, string pExtraValuePath = null)
         {
-            this._NewPermissionTable(pBearer, string.Empty, pJwtIamName);
+            this._NewPermissionTable(pBearer, string.Empty, pJwtIamName, pExtraValuePath);
         }
 
         public JwtTools()
@@ -50,19 +48,17 @@ namespace DotnetJwtTools
         /// <param name="pJwtIamName"></param>
         /// <remarks></remarks>
         /// <returns></returns>
-        private void _NewPermissionTable(string pBearer, string pAdminGroup, string pJwtIamName)
+        private void _NewPermissionTable(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath)
         {            
             try
             {
                 //List<Claim> claims = _ValidateJwtToken(pBearer, config);
-                string strJwt = _ExtractIam(pBearer, pJwtIamName);
+                string strJwt = _ExtractClaims(pBearer, pJwtIamName, pExtraValuePath);
 
                 if (!string.IsNullOrEmpty(strJwt))
                 {   
                     Jwt jwt = JsonConvert.DeserializeObject<Jwt>(strJwt);
 
-                    //this.Bearer = pBearer;
-                    //this.MemberId = strMemberId;
                     this.IsAdmin = false;
                     this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
                     this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
@@ -110,17 +106,26 @@ namespace DotnetJwtTools
         #endregion
 
         //Return the IAM and MemberID claims value
-        private static string _ExtractIam(string pJwt, string pJwtIamName)
+        private string _ExtractClaims(string pJwt, string pJwtIamName, string pExtraValuePath)
         {
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            JwtSecurityToken token = (JwtSecurityToken)handler.ReadToken(pJwt);
+            JwtSecurityToken token = (JwtSecurityToken)handler.ReadJwtToken(pJwt);
 
-            foreach (Claim claim in token.Claims)
+            bool getExtraValue = !string.IsNullOrEmpty(pExtraValuePath);
+            
+            string ret = string.Empty;
+
+            foreach (Claim claimdentey in token.Claims)
             {
-                if (claim.Type == pJwtIamName) return claim.Value;
+                if (claimdentey.Type == pJwtIamName) ret = claimdentey.Value;
+                if (getExtraValue && claimdentey.Type == pExtraValuePath)
+                {
+                    if (this.ExtraNode == null) ExtraNode = new HashSet<string>();
+                    this.ExtraNode.Add(claimdentey.Value);
+                }
             }
 
-            return string.Empty;
+            return ret;
         }
 
         /// <summary>
