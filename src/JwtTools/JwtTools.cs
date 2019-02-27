@@ -13,6 +13,7 @@ namespace DotnetJwtTools
         private const string CNST_ALL = "all";
         private const string CNST_CRUD = "crud";
         private const string CNST_ADMIN = "a";
+        private const string CNST_TEAM = "TEAM";
 
         //---------- BASIC PERMISSIONS -----------//
         private const string CNST_CREATE = "c";
@@ -150,10 +151,10 @@ namespace DotnetJwtTools
                 pTree[group.GroupCode] = new GroupTree { Groups = new Dictionary<string, GroupTree>(), GroupType = group.Type };
 
                 //Check the Products
-                if (group.GroupAdditional?.Count > 0) this._ExtractAdditionalGroups(group.GroupAdditional);
+                //if (group.GroupAdditional?.Count > 0) this._ExtractAdditionalGroups(group.GroupAdditional);
 
-                bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this.Permissions, group.GroupCode, pAdminGroup);
-                if (isAdmin) this.IsAdmin = true;
+                bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this.Permissions, group.GroupCode, pAdminGroup, group.Type);
+                //if (isAdmin) this.IsAdmin = true;
 
                 //Call recursivity
                 Dictionary<string, GroupTree> groupTree = pTree[group.GroupCode].Groups;
@@ -170,7 +171,7 @@ namespace DotnetJwtTools
         /// <param name="pAdminGroup"></param>
         /// <remarks></remarks>
         /// <returns></returns>
-        private bool _FillPermissionsFromProducts(Dictionary<string, Dictionary<string, List<string>>> pProducts, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> pPermissions, string pGroup, string pAdminGroup)
+        private bool _FillPermissionsFromProducts(Dictionary<string, Dictionary<string, List<string>>> pProducts, Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> pPermissions, string pGroup, string pAdminGroup, string pGroupType)
         {
             if (pProducts == null) return false;
             bool ret = false;
@@ -200,7 +201,7 @@ namespace DotnetJwtTools
                             p.Add(perms.Key, new Dictionary<string, Dictionary<string, HashSet<string>>>());
                         }
 
-                        tuple = _GetObjects(perms.Value, pGroup, p[perms.Key], pAdminGroup);
+                        tuple = _GetObjects(perms.Value, pGroup, p[perms.Key], pAdminGroup, pGroupType);
                         pPermissions[objects.Key][perms.Key] = tuple.Item2;
                         if (tuple.Item1) ret = true;
                     }
@@ -218,7 +219,7 @@ namespace DotnetJwtTools
         /// <param name="pAdminGroup"></param>
         /// <remarks></remarks>
         /// <returns>A tuple with item1 = is Admin, Item2 = permissions.</returns>
-        private Tuple<bool, Dictionary<string, Dictionary<string, HashSet<string>>>> _GetObjects(List<string> pRoles, string pGroup, Dictionary<string, Dictionary<string, HashSet<string>>> pP, string pAdminGroup)
+        private Tuple<bool, Dictionary<string, Dictionary<string, HashSet<string>>>> _GetObjects(List<string> pRoles, string pGroup, Dictionary<string, Dictionary<string, HashSet<string>>> pP, string pAdminGroup, string pGroupType)
         {
             bool isAdmin = false;
 
@@ -233,7 +234,17 @@ namespace DotnetJwtTools
 
                     if (!pP[perm.Key].ContainsKey(pGroup))
                     {
-                        pP[perm.Key].Add(pGroup, null);
+                        //If is a internal team, has permission for all orgs
+                        if (pGroupType == CNST_TEAM)
+                        {
+                            if (!pP[perm.Key].ContainsKey(CNST_ALL))
+                                pP[perm.Key].Add(CNST_ALL, null);
+                        }
+                        else
+                        {
+
+                        }
+                            pP[perm.Key].Add(pGroup, null);
                     }                    
                 }
             }
