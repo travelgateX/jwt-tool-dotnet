@@ -150,6 +150,8 @@ namespace DotnetJwtTools
                 pTree[group.GroupCode] = new GroupTree { Groups = new Dictionary<string, GroupTree>(), GroupType = group.Type };
 
                 //Check the Products
+                if (group.GroupAdditional?.Count > 0) this._ExtractAdditionalGroups(group.GroupAdditional);
+
                 bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this.Permissions, group.GroupCode, pAdminGroup);
                 if (isAdmin) this.IsAdmin = true;
 
@@ -284,6 +286,46 @@ namespace DotnetJwtTools
             return new Dictionary<string, Dictionary<string, string>>();
         }
 
+        private void _ExtractAdditionalGroups(Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>> pGroupAdditional)
+        {
+            if (this.Permissions == null) this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
+            string perm = string.Empty;
+            //for each product
+            foreach (var groupProd in pGroupAdditional)
+            {
+                if (!this.Permissions.ContainsKey(groupProd.Key))
+                    this.Permissions.Add(groupProd.Key, new Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>());
+
+                //for each api
+                foreach (var groupApi in groupProd.Value)
+                {
+                    if (!this.Permissions[groupProd.Key].ContainsKey(groupApi.Key))
+                        this.Permissions[groupProd.Key].Add(groupApi.Key, new Dictionary<string, Dictionary<string, HashSet<string>>>());
+
+                    //for each object
+                    foreach (var groupObj in groupApi.Value)
+                    {
+                        //if (!this.Permissions[groupProd.Key][groupApi.Key].ContainsKey(groupObj.Key))
+                        //    this.Permissions[groupProd.Key][groupApi.Key].Add(groupObj.Key, new Dictionary<string, HashSet<string>>());
+
+                        //foreach permission
+                        foreach (var groupPer in groupObj.Value)
+                        {
+                            perm = groupPer;
+                            if (perm == "1a") perm = CNST_ADMIN;
+
+                            //add Permission
+                            if (!this.Permissions[groupProd.Key][groupApi.Key].ContainsKey(perm))
+                                this.Permissions[groupProd.Key][groupApi.Key].Add(perm, new Dictionary<string, HashSet<string>>());
+
+                            if (!this.Permissions[groupProd.Key][groupApi.Key][perm].ContainsKey(groupObj.Key))
+                                this.Permissions[groupProd.Key][groupApi.Key][perm].Add(groupObj.Key, null);
+                        }
+                    }
+                }
+               
+            }
+        }
 
         /// <summary>
         /// Check if a group have a permision for a product and object 

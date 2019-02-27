@@ -20,7 +20,7 @@ namespace DotnetJwtTools
         [JsonProperty(PropertyName = "p")]
         public Dictionary<string, Dictionary<string, List<string>>> GroupPermissions { get; set; }
         [JsonProperty(PropertyName = "a")]
-        public object GroupAdditional { get; set; }
+        public Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>> GroupAdditional { get; set; }
     }
 
     [JsonObject]
