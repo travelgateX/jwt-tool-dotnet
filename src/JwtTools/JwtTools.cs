@@ -14,6 +14,7 @@ namespace DotnetJwtTools
         private const string CNST_CRUD = "crud";
         private const string CNST_ADMIN = "a";
         private const string CNST_TEAM = "TEAM";
+        private const string CNST_PRODUCT = "PRODUCT";
 
         //---------- BASIC PERMISSIONS -----------//
         private const string CNST_CREATE = "c";
@@ -26,6 +27,7 @@ namespace DotnetJwtTools
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> Permissions { get; set; }
         public bool IsAdmin { get; set; }
         public HashSet<string> ExtraNode { get; set; }
+        public HashSet<string> IamProducts { get; set; }
 
         public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath = null)
         {
@@ -62,7 +64,7 @@ namespace DotnetJwtTools
 
                     this.IsAdmin = false;
                     this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
-                    this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);                    
+                    this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);
                 }
             }
             catch (Exception e)
@@ -146,6 +148,13 @@ namespace DotnetJwtTools
                 //Check if the data is filled
                 if (group.GroupCode == null) return;
                 if (group.Type == null) return;
+
+                //Add Products to ProductList
+                if (group.Type == CNST_PRODUCT)
+                {
+                    if (this.IamProducts == null) this.IamProducts = new HashSet<string>();
+                    if (!this.IamProducts.Contains(group.GroupCode)) this.IamProducts.Add(group.GroupCode);
+                }
 
                 //Fill the tree with the data on the group
                 pTree[group.GroupCode] = new GroupTree { Groups = new Dictionary<string, GroupTree>(), GroupType = group.Type };
@@ -239,6 +248,10 @@ namespace DotnetJwtTools
                         {
                             if (!pP[perm.Key].ContainsKey(CNST_ALL))
                                 pP[perm.Key].Add(CNST_ALL, null);
+
+                            //Add all products for interal teams
+                            if (this.IamProducts == null) this.IamProducts = new HashSet<string>();
+                            if (!this.IamProducts.Contains(CNST_ALL)) this.IamProducts.Add(CNST_ALL);
                         }
                         else
                         {
