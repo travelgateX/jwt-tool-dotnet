@@ -293,7 +293,15 @@ namespace DotnetJwtTools
                 }
             }
 
-            if (enabled) return ret;
+            
+            if (enabled)
+            {
+                if (ret.ContainsKey(CNST_CREATE) && ret.ContainsKey(CNST_READ) && ret.ContainsKey(CNST_UPDATE) && ret.ContainsKey(CNST_DELETE))
+                    ret.Add(CNST_ADMIN, new Dictionary<string, string>());
+
+                return ret;
+            }
+
             return new Dictionary<string, Dictionary<string, string>>();
         }
 
