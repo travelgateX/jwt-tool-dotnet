@@ -124,7 +124,8 @@ namespace DotnetJwtTools
                 if (getExtraValue && claim.Type == pExtraValuePath)
                 {
                     if (this.ExtraNode == null) ExtraNode = new HashSet<string>();
-                    this.ExtraNode.Add(claim.Value);
+                    if (!this.ExtraNode.Contains(claim.Value))
+                        this.ExtraNode.Add(claim.Value);
                 }
             }
 
@@ -253,11 +254,8 @@ namespace DotnetJwtTools
                             if (this.IamProducts == null) this.IamProducts = new HashSet<string>();
                             if (!this.IamProducts.Contains(CNST_ALL)) this.IamProducts.Add(CNST_ALL);
                         }
-                        else
-                        {
 
-                        }
-                            pP[perm.Key].Add(pGroup, null);
+                        pP[perm.Key].Add(pGroup, null);
                     }                    
                 }
             }
@@ -310,7 +308,7 @@ namespace DotnetJwtTools
             if (enabled)
             {
                 if (ret.ContainsKey(CNST_CREATE) && ret.ContainsKey(CNST_READ) && ret.ContainsKey(CNST_UPDATE) && ret.ContainsKey(CNST_DELETE))
-                    ret.Add(CNST_ADMIN, new Dictionary<string, string>());
+                    if (!ret.ContainsKey(CNST_ADMIN)) ret.Add(CNST_ADMIN, new Dictionary<string, string>());
 
                 return ret;
             }
