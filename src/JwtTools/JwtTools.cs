@@ -26,6 +26,7 @@ namespace DotnetJwtTools
         // Product --> Object --> Permission --> Groups ... Api -> Operation -> read, Update -> Organizations..
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> Permissions { get; set; }
         public bool IsAdmin { get; set; }
+        public string UserEmail { get; set; }
         public HashSet<string> ExtraNode { get; set; }
         public HashSet<string> IamProducts { get; set; }
 
@@ -127,6 +128,8 @@ namespace DotnetJwtTools
                     if (!this.ExtraNode.Contains(claim.Value))
                         this.ExtraNode.Add(claim.Value);
                 }
+
+                if (claim.Type == "name") this.UserEmail = claim.Value;
             }
 
             return ret;
