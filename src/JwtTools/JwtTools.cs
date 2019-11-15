@@ -3,25 +3,30 @@ using System;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace DotnetJwtTools
 {    
     public class JwtTools
     {
-        public bool isError = false;
+        public bool IsError = false;
         public string Error = null;
         private const string CNST_ALL = "all";
         private const string CNST_CRUD = "crud";
         private const string CNST_ADMIN = "a";
         private const string CNST_TEAM = "TEAM";
         private const string CNST_PRODUCT = "PRODUCT";
+        //---------- FETCH NEEDED ----------------//
+        private const string CNST_FETCH_NEED = "https://travelgatex.com/fetch_needed";
 
         //---------- BASIC PERMISSIONS -----------//
         private const string CNST_CREATE = "c";
         private const string CNST_UPDATE = "u";
         private const string CNST_DELETE = "d";
         private const string CNST_READ = "r";
-        private const string CNST_EXECUTE = "x";
 
         // Product --> Object --> Permission --> Groups ... Api -> Operation -> read, Update -> Organizations..
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> Permissions { get; set; }
@@ -29,14 +34,17 @@ namespace DotnetJwtTools
         public string UserEmail { get; set; }
         public HashSet<string> ExtraNode { get; set; }
         public HashSet<string> IamProducts { get; set; }
+        public bool IsBearer { get; set; } = false;
 
         public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath = null)
         {
+            this.IsBearer = true;
             this._NewPermissionTable(pBearer, pAdminGroup, pJwtIamName, pExtraValuePath);
         }
 
         public JwtTools(string pBearer, string pJwtIamName, string pExtraValuePath = null)
         {
+            this.IsBearer = true;
             this._NewPermissionTable(pBearer, string.Empty, pJwtIamName, pExtraValuePath);
         }
 
@@ -71,7 +79,7 @@ namespace DotnetJwtTools
             catch (Exception e)
             {
                 this.Error = e.Message;
-                this.isError = true;
+                this.IsError = true;
                 this.Permissions = null;
             }
         }
@@ -110,18 +118,27 @@ namespace DotnetJwtTools
         #endregion
 
         //Return the IAM and extravalue claims value
-        private string _ExtractClaims(string pJwt, string pJwtIamName, string pExtraValuePath)
+        private string _ExtractClaims(string pJwt, string pJwtIamName, string pExtraValuePath, bool isRecusive = false)
         {
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            JwtSecurityToken token = (JwtSecurityToken)handler.ReadJwtToken(pJwt);
+            JwtSecurityToken token = handler.ReadJwtToken(pJwt);
 
             bool getExtraValue = !string.IsNullOrEmpty(pExtraValuePath);
+            string fetchNeed = null;
             
             string ret = string.Empty;
 
             foreach (Claim claim in token.Claims)
             {
-                if (claim.Type == pJwtIamName) ret = claim.Value;
+                // Check if is fetch needed
+                if (claim.Type == CNST_FETCH_NEED)
+                    fetchNeed = claim.Value;
+
+                // Get IAM
+                if (claim.Type == pJwtIamName) 
+                    ret = claim.Value;
+
+                // Get Extra Nodes
                 if (getExtraValue && claim.Type == pExtraValuePath)
                 {
                     if (this.ExtraNode == null) ExtraNode = new HashSet<string>();
@@ -129,8 +146,34 @@ namespace DotnetJwtTools
                         this.ExtraNode.Add(claim.Value);
                 }
 
-                if (claim.Type == "name") this.UserEmail = claim.Value;
+                // Get User Email
+                if (claim.Type == "name") 
+                    this.UserEmail = claim.Value;
             }
+
+            if (!isRecusive && fetchNeed == "true")
+            {
+                string newBearer = _GetFullBearer(pJwt);
+                ret = this._ExtractClaims(newBearer, pJwtIamName, pExtraValuePath, true);
+            }
+                
+
+            return ret;
+        }
+
+        private string _GetFullBearer(string pBearer)
+        {
+            const string url = "https://api-iam.travelgatex.com/controller/xquery";
+            const string request = "{\"query\":\"query{ admin{ getBearer(){ token adviseMessage{ code description level } } } }\"}";
+
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", pBearer);
+
+            HttpResponseMessage rs = client.PostAsync(url, new StringContent(request)).GetAwaiter().GetResult();
+
+            string json = rs.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            JObject jObject = JObject.Parse(json);
+            string ret = jObject["data"]["admin"]["getBearer"]["token"].ToString();
 
             return ret;
         }
