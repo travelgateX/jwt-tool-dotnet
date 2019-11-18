@@ -147,7 +147,7 @@ namespace DotnetJwtTools
                 }
 
                 // Get User Email
-                if (claim.Type == "name") 
+                if (claim.Type == "https://travelgatex.com/member_id") 
                     this.UserEmail = claim.Value;
             }
 
