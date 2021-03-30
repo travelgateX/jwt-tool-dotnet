@@ -11,7 +11,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 
 namespace DotnetJwtTools
-{    
+{
     public class JwtTools
     {
         #region PUBLIC KEY AUTH0
@@ -38,24 +38,27 @@ namespace DotnetJwtTools
         public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>> Permissions { get; set; }
         public bool IsAdmin { get; set; }
         public string UserEmail { get; set; }
+        public string UserBearer { get; set; }
         public HashSet<string> ExtraNode { get; set; }
         public HashSet<string> IamProducts { get; set; }
         public bool IsBearer { get; set; } = false;
 
         public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath = null)
         {
-            this.IsBearer = true;
-            this._NewPermissionTable(pBearer, pAdminGroup, pJwtIamName, pExtraValuePath);
+            IsBearer = true;
+            UserBearer = pBearer;
+            _NewPermissionTable(pBearer, pAdminGroup, pJwtIamName, pExtraValuePath);
         }
 
         public JwtTools(string pBearer, string pJwtIamName, string pExtraValuePath = null)
         {
-            this.IsBearer = true;
-            this._NewPermissionTable(pBearer, string.Empty, pJwtIamName, pExtraValuePath);
+            IsBearer = true;
+            UserBearer = pBearer;
+            _NewPermissionTable(pBearer, string.Empty, pJwtIamName, pExtraValuePath);
         }
 
         public JwtTools()
-        {            
+        {
         }
 
         /// <summary>
@@ -67,34 +70,34 @@ namespace DotnetJwtTools
         /// <remarks></remarks>
         /// <returns></returns>
         private void _NewPermissionTable(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath)
-        {            
+        {
             try
             {
                 bool jwtValidated = _ValidateJwtToken(pBearer);
-                
+
                 if (!jwtValidated)
                 {
-                    this.IsError = true;
-                    this.Permissions = null;
-                    this.Error = "Invalid Bearer";
+                    IsError = true;
+                    Permissions = null;
+                    Error = "Invalid Bearer";
                 }
 
                 string strJwt = _ExtractClaims(pBearer, pJwtIamName, pExtraValuePath);
 
                 if (!string.IsNullOrEmpty(strJwt))
-                {   
+                {
                     Jwt jwt = JsonConvert.DeserializeObject<Jwt>(strJwt);
 
-                    this.IsAdmin = false;
-                    this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
-                    this._BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);
+                    IsAdmin = false;
+                    Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
+                    _BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);
                 }
             }
             catch (Exception e)
             {
-                this.Error = e.Message;
-                this.IsError = true;
-                this.Permissions = null;
+                Error = e.Message;
+                IsError = true;
+                Permissions = null;
             }
         }
 
@@ -122,7 +125,7 @@ namespace DotnetJwtTools
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
 
             ClaimsPrincipal claims = handler.ValidateToken(pJwt, validationParameters, out validatedToken);
-           
+
             if (claims?.Claims?.Count() > 0)
             {
                 return true;
@@ -140,7 +143,7 @@ namespace DotnetJwtTools
 
             bool getExtraValue = !string.IsNullOrEmpty(pExtraValuePath);
             string fetchNeed = null;
-            
+
             string ret = string.Empty;
 
             foreach (Claim claim in token.Claims)
@@ -150,28 +153,28 @@ namespace DotnetJwtTools
                     fetchNeed = claim.Value;
 
                 // Get IAM
-                if (claim.Type == pJwtIamName) 
+                if (claim.Type == pJwtIamName)
                     ret = claim.Value;
 
                 // Get Extra Nodes
                 if (getExtraValue && claim.Type == pExtraValuePath)
                 {
-                    if (this.ExtraNode == null) ExtraNode = new HashSet<string>();
-                    if (!this.ExtraNode.Contains(claim.Value))
-                        this.ExtraNode.Add(claim.Value);
+                    if (ExtraNode == null) ExtraNode = new HashSet<string>();
+                    if (!ExtraNode.Contains(claim.Value))
+                        ExtraNode.Add(claim.Value);
                 }
 
                 // Get User Email
-                if (claim.Type == "https://travelgatex.com/member_id") 
-                    this.UserEmail = claim.Value;
+                if (claim.Type == "https://travelgatex.com/member_id")
+                    UserEmail = claim.Value;
             }
 
             if (!isRecusive && fetchNeed == "true")
             {
                 string newBearer = _GetFullBearer(pJwt);
-                ret = this._ExtractClaims(newBearer, pJwtIamName, pExtraValuePath, true);
+                ret = _ExtractClaims(newBearer, pJwtIamName, pExtraValuePath, true);
             }
-                
+
 
             return ret;
         }
@@ -214,8 +217,8 @@ namespace DotnetJwtTools
                 //Add Products to ProductList
                 if (group.Type == CNST_PRODUCT)
                 {
-                    if (this.IamProducts == null) this.IamProducts = new HashSet<string>();
-                    if (!this.IamProducts.Contains(group.GroupCode)) this.IamProducts.Add(group.GroupCode);
+                    if (IamProducts == null) IamProducts = new HashSet<string>();
+                    if (!IamProducts.Contains(group.GroupCode)) IamProducts.Add(group.GroupCode);
                 }
 
                 //Fill the tree with the data on the group
@@ -224,12 +227,11 @@ namespace DotnetJwtTools
                 //Check the Products
                 //if (group.GroupAdditional?.Count > 0) this._ExtractAdditionalGroups(group.GroupAdditional);
 
-                bool isAdmin = _FillPermissionsFromProducts(group.GroupPermissions, this.Permissions, group.GroupCode, pAdminGroup, group.Type);
-                //if (isAdmin) this.IsAdmin = true;
+                _FillPermissionsFromProducts(group.GroupPermissions, Permissions, group.GroupCode, pAdminGroup, group.Type);
 
                 //Call recursivity
                 Dictionary<string, GroupTree> groupTree = pTree[group.GroupCode].Groups;
-                this._BuildPermissions(group.GroupDescendants, groupTree, pAdminGroup);
+                _BuildPermissions(group.GroupDescendants, groupTree, pAdminGroup);
             }
         }
 
@@ -312,12 +314,12 @@ namespace DotnetJwtTools
                                 pP[perm.Key].Add(CNST_ALL, null);
 
                             //Add all products for interal teams
-                            if (this.IamProducts == null) this.IamProducts = new HashSet<string>();
-                            if (!this.IamProducts.Contains(CNST_ALL)) this.IamProducts.Add(CNST_ALL);
+                            if (IamProducts == null) IamProducts = new HashSet<string>();
+                            if (!IamProducts.Contains(CNST_ALL)) IamProducts.Add(CNST_ALL);
                         }
 
                         pP[perm.Key].Add(pGroup, null);
-                    }                    
+                    }
                 }
             }
 
@@ -365,7 +367,7 @@ namespace DotnetJwtTools
                 }
             }
 
-            
+
             if (enabled)
             {
                 if (ret.ContainsKey(CNST_CREATE) && ret.ContainsKey(CNST_READ) && ret.ContainsKey(CNST_UPDATE) && ret.ContainsKey(CNST_DELETE))
@@ -377,46 +379,46 @@ namespace DotnetJwtTools
             return new Dictionary<string, Dictionary<string, string>>();
         }
 
-        private void _ExtractAdditionalGroups(Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>> pGroupAdditional)
-        {
-            if (this.Permissions == null) this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
-            string perm = string.Empty;
-            //for each product
-            foreach (var groupProd in pGroupAdditional)
-            {
-                if (!this.Permissions.ContainsKey(groupProd.Key))
-                    this.Permissions.Add(groupProd.Key, new Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>());
+        //private void _ExtractAdditionalGroups(Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>> pGroupAdditional)
+        //{
+        //    if (this.Permissions == null) this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
+        //    string perm = string.Empty;
+        //    //for each product
+        //    foreach (var groupProd in pGroupAdditional)
+        //    {
+        //        if (!this.Permissions.ContainsKey(groupProd.Key))
+        //            this.Permissions.Add(groupProd.Key, new Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>());
 
-                //for each api
-                foreach (var groupApi in groupProd.Value)
-                {
-                    if (!this.Permissions[groupProd.Key].ContainsKey(groupApi.Key))
-                        this.Permissions[groupProd.Key].Add(groupApi.Key, new Dictionary<string, Dictionary<string, HashSet<string>>>());
+        //        //for each api
+        //        foreach (var groupApi in groupProd.Value)
+        //        {
+        //            if (!this.Permissions[groupProd.Key].ContainsKey(groupApi.Key))
+        //                this.Permissions[groupProd.Key].Add(groupApi.Key, new Dictionary<string, Dictionary<string, HashSet<string>>>());
 
-                    //for each object
-                    foreach (var groupObj in groupApi.Value)
-                    {
-                        //if (!this.Permissions[groupProd.Key][groupApi.Key].ContainsKey(groupObj.Key))
-                        //    this.Permissions[groupProd.Key][groupApi.Key].Add(groupObj.Key, new Dictionary<string, HashSet<string>>());
+        //            //for each object
+        //            foreach (var groupObj in groupApi.Value)
+        //            {
+        //                //if (!this.Permissions[groupProd.Key][groupApi.Key].ContainsKey(groupObj.Key))
+        //                //    this.Permissions[groupProd.Key][groupApi.Key].Add(groupObj.Key, new Dictionary<string, HashSet<string>>());
 
-                        //foreach permission
-                        foreach (var groupPer in groupObj.Value)
-                        {
-                            perm = groupPer;
-                            if (perm == "1a") perm = CNST_ADMIN;
+        //                //foreach permission
+        //                foreach (var groupPer in groupObj.Value)
+        //                {
+        //                    perm = groupPer;
+        //                    if (perm == "1a") perm = CNST_ADMIN;
 
-                            //add Permission
-                            if (!this.Permissions[groupProd.Key][groupApi.Key].ContainsKey(perm))
-                                this.Permissions[groupProd.Key][groupApi.Key].Add(perm, new Dictionary<string, HashSet<string>>());
+        //                    //add Permission
+        //                    if (!this.Permissions[groupProd.Key][groupApi.Key].ContainsKey(perm))
+        //                        this.Permissions[groupProd.Key][groupApi.Key].Add(perm, new Dictionary<string, HashSet<string>>());
 
-                            if (!this.Permissions[groupProd.Key][groupApi.Key][perm].ContainsKey(groupObj.Key))
-                                this.Permissions[groupProd.Key][groupApi.Key][perm].Add(groupObj.Key, null);
-                        }
-                    }
-                }
-               
-            }
-        }
+        //                    if (!this.Permissions[groupProd.Key][groupApi.Key][perm].ContainsKey(groupObj.Key))
+        //                        this.Permissions[groupProd.Key][groupApi.Key][perm].Add(groupObj.Key, null);
+        //                }
+        //            }
+        //        }
+
+        //    }
+        //}
 
         /// <summary>
         /// Check if a group have a permision for a product and object 
@@ -429,7 +431,7 @@ namespace DotnetJwtTools
         /// <returns>A boolean meaning if the group have permission</returns>
         public bool CheckPermission(string pProduct, string pObj, string pPermission, string pGroup, string pOperation = null)
         {
-            return this.CheckPermission(pProduct, pObj, pPermission, new List<string> { pGroup }, pOperation);
+            return CheckPermission(pProduct, pObj, pPermission, new List<string> { pGroup }, pOperation);
         }
 
         /// <summary>
@@ -444,30 +446,30 @@ namespace DotnetJwtTools
         public bool CheckPermission(string pProduct, string pObj, string pPermission, List<string> pGroups, string pOperation = null)
         {
             //--- Initial validations
-            if (this.IsAdmin) { return true; }
-            if (this.Permissions == null) return false;
+            if (IsAdmin) { return true; }
+            if (Permissions == null) return false;
             bool checkOperation = !string.IsNullOrEmpty(pOperation);
             //---
 
             //Check for concrete product
-            if (this.Permissions.ContainsKey(pProduct))
+            if (Permissions.ContainsKey(pProduct))
             {
                 //Check for all object
-                if (this.Permissions[pProduct].ContainsKey(CNST_ALL))
+                if (Permissions[pProduct].ContainsKey(CNST_ALL))
                 {
-                    if (this.Permissions[pProduct][CNST_ALL].ContainsKey(pPermission))
+                    if (Permissions[pProduct][CNST_ALL].ContainsKey(pPermission))
                     {
                         foreach (string group in pGroups)
                         {
                             //Check if have the group
-                            if (this.Permissions[pProduct][CNST_ALL][pPermission].ContainsKey(group))
+                            if (Permissions[pProduct][CNST_ALL][pPermission].ContainsKey(group))
                             {
                                 if (!checkOperation) return true;
 
                                 //Check if we have the operationAdded to operations list
-                                if (this.Permissions[pProduct][CNST_ALL][pPermission][group] != null)
+                                if (Permissions[pProduct][CNST_ALL][pPermission][group] != null)
                                 {
-                                    if (this.Permissions[pProduct][CNST_ALL][pPermission][group].Contains(pOperation)) return true;
+                                    if (Permissions[pProduct][CNST_ALL][pPermission][group].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -478,14 +480,14 @@ namespace DotnetJwtTools
                         }
 
                         //Check if we have all the groups
-                        if (this.Permissions[pProduct][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
+                        if (Permissions[pProduct][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
                         {
                             if (!checkOperation) return true;
 
                             //Check if we have the operationAdded to operations list
-                            if (this.Permissions[pProduct][CNST_ALL][pPermission][CNST_ALL] != null)
+                            if (Permissions[pProduct][CNST_ALL][pPermission][CNST_ALL] != null)
                             {
-                                if (this.Permissions[pProduct][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                                if (Permissions[pProduct][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation)) return true;
                             }
                             //If the hashset of operation is null, we asume we don't filter by operation
                             else
@@ -494,10 +496,10 @@ namespace DotnetJwtTools
                             }
                         }
                     }
-                    
+
                     //Check if we have major permission
                     //We do this always in the case we have more permission than indicated in a operation               
-                    foreach (var permission in this.Permissions[pProduct][CNST_ALL])
+                    foreach (var permission in Permissions[pProduct][CNST_ALL])
                     {
                         //Check if we have the group
                         if (permission.Key.StartsWith(CNST_CRUD) || permission.Key.Equals(CNST_ADMIN))
@@ -510,9 +512,9 @@ namespace DotnetJwtTools
                                     if (!checkOperation) return true;
 
                                     //Check if we have the operationAdded to operations list
-                                    if (this.Permissions[pProduct][CNST_ALL][permission.Key][group] != null)
+                                    if (Permissions[pProduct][CNST_ALL][permission.Key][group] != null)
                                     {
-                                        if (this.Permissions[pProduct][CNST_ALL][permission.Key][group].Contains(pOperation)) return true;
+                                        if (Permissions[pProduct][CNST_ALL][permission.Key][group].Contains(pOperation)) return true;
                                     }
                                     //If the hashset of operation is null, we asume we don't filter by operation
                                     else
@@ -520,7 +522,7 @@ namespace DotnetJwtTools
                                         return true;
                                     }
                                 }
-                            }                            
+                            }
 
                             //Check if we have all
                             if (permission.Value.ContainsKey(CNST_ALL))
@@ -528,9 +530,9 @@ namespace DotnetJwtTools
                                 if (!checkOperation) return true;
 
                                 //Check if we have the operationAdded to operations list
-                                if (this.Permissions[pProduct][CNST_ALL][permission.Key][CNST_ALL] != null)
+                                if (Permissions[pProduct][CNST_ALL][permission.Key][CNST_ALL] != null)
                                 {
-                                    if (this.Permissions[pProduct][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation)) return true;
+                                    if (Permissions[pProduct][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -540,24 +542,24 @@ namespace DotnetJwtTools
                             }
                         }
                     }
-                    
+
 
                 }
 
                 //Check for concrete object
-                if (this.Permissions[pProduct].ContainsKey(pObj))
-                {                    
-                    if (this.Permissions[pProduct][pObj].ContainsKey(pPermission))
+                if (Permissions[pProduct].ContainsKey(pObj))
+                {
+                    if (Permissions[pProduct][pObj].ContainsKey(pPermission))
                     {
                         foreach (string group in pGroups)
                         {
-                            if (this.Permissions[pProduct][pObj][pPermission].ContainsKey(group))
+                            if (Permissions[pProduct][pObj][pPermission].ContainsKey(group))
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[pProduct][pObj][pPermission][group] != null)
+                                if (Permissions[pProduct][pObj][pPermission][group] != null)
                                 {
-                                    if (this.Permissions[pProduct][pObj][pPermission][group].Contains(pOperation)) return true;
+                                    if (Permissions[pProduct][pObj][pPermission][group].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -568,13 +570,13 @@ namespace DotnetJwtTools
                             }
                         }
 
-                        if (this.Permissions[pProduct][pObj][pPermission].ContainsKey(CNST_ALL))
+                        if (Permissions[pProduct][pObj][pPermission].ContainsKey(CNST_ALL))
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][pPermission][CNST_ALL] != null)                                
+                            if (Permissions[pProduct][pObj][pPermission][CNST_ALL] != null)
                             {
-                                if (this.Permissions[pProduct][pObj][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                                if (Permissions[pProduct][pObj][pPermission][CNST_ALL].Contains(pOperation)) return true;
                             }
                             //If the hashset of operation is null, we asume we don't filter by operation
                             else
@@ -584,17 +586,17 @@ namespace DotnetJwtTools
                         }
 
                     }
-                    else if (this.Permissions[pProduct][pObj].ContainsKey(CNST_CRUD))
+                    else if (Permissions[pProduct][pObj].ContainsKey(CNST_CRUD))
                     {
                         foreach (string group in pGroups)
                         {
-                            if (this.Permissions[pProduct][pObj][CNST_CRUD].ContainsKey(group))
+                            if (Permissions[pProduct][pObj][CNST_CRUD].ContainsKey(group))
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[pProduct][pObj][CNST_CRUD][group] != null)
+                                if (Permissions[pProduct][pObj][CNST_CRUD][group] != null)
                                 {
-                                    if (this.Permissions[pProduct][pObj][CNST_CRUD][group].Contains(pOperation)) return true;
+                                    if (Permissions[pProduct][pObj][CNST_CRUD][group].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -604,13 +606,13 @@ namespace DotnetJwtTools
                             }
                         }
 
-                        if (this.Permissions[pProduct][pObj][CNST_CRUD].ContainsKey(CNST_ALL))
+                        if (Permissions[pProduct][pObj][CNST_CRUD].ContainsKey(CNST_ALL))
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL] != null)
+                            if (Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL] != null)
                             {
-                                if (this.Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL].Contains(pOperation)) return true;
+                                if (Permissions[pProduct][pObj][CNST_CRUD][CNST_ALL].Contains(pOperation)) return true;
                             }
                             //If the hashset of operation is null, we asume we don't filter by operation
                             else
@@ -619,17 +621,17 @@ namespace DotnetJwtTools
                             }
                         }
                     }
-                    else if (this.Permissions[pProduct][pObj].ContainsKey(CNST_ADMIN))
+                    else if (Permissions[pProduct][pObj].ContainsKey(CNST_ADMIN))
                     {
                         foreach (string group in pGroups)
                         {
-                            if (this.Permissions[pProduct][pObj][CNST_ADMIN].ContainsKey(group))
+                            if (Permissions[pProduct][pObj][CNST_ADMIN].ContainsKey(group))
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[pProduct][pObj][CNST_ADMIN][group] != null)
+                                if (Permissions[pProduct][pObj][CNST_ADMIN][group] != null)
                                 {
-                                    if (this.Permissions[pProduct][pObj][CNST_ADMIN][group].Contains(pOperation)) return true;
+                                    if (Permissions[pProduct][pObj][CNST_ADMIN][group].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -639,13 +641,13 @@ namespace DotnetJwtTools
                             }
                         }
 
-                        if (this.Permissions[pProduct][pObj][CNST_ADMIN].ContainsKey(CNST_ALL))
+                        if (Permissions[pProduct][pObj][CNST_ADMIN].ContainsKey(CNST_ALL))
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL] != null)
+                            if (Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL] != null)
                             {
-                                if (this.Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL].Contains(pOperation)) return true;
+                                if (Permissions[pProduct][pObj][CNST_ADMIN][CNST_ALL].Contains(pOperation)) return true;
                             }
                             //If the hashset of operation is null, we asume we don't filter by operation
                             else
@@ -658,24 +660,24 @@ namespace DotnetJwtTools
             }
 
             //Check for all product
-            if (this.Permissions.ContainsKey(CNST_ALL))
+            if (Permissions.ContainsKey(CNST_ALL))
             {
                 //Check for all object
-                if (this.Permissions[CNST_ALL].ContainsKey(CNST_ALL))
+                if (Permissions[CNST_ALL].ContainsKey(CNST_ALL))
                 {
                     //Check for all permission
-                    if (this.Permissions[CNST_ALL][CNST_ALL].ContainsKey(pPermission))
+                    if (Permissions[CNST_ALL][CNST_ALL].ContainsKey(pPermission))
                     {
                         foreach (string group in pGroups)
                         {
                             //Check if have the group
-                            if (this.Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(group))
+                            if (Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(group))
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][group] != null)
+                                if (Permissions[CNST_ALL][CNST_ALL][pPermission][group] != null)
                                 {
-                                    if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][group].Contains(pOperation)) return true;
+                                    if (Permissions[CNST_ALL][CNST_ALL][pPermission][group].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -686,13 +688,13 @@ namespace DotnetJwtTools
                         }
 
                         //Check if have the all
-                        if (this.Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
+                        if (Permissions[CNST_ALL][CNST_ALL][pPermission].ContainsKey(CNST_ALL))
                         {
                             if (!checkOperation) return true;
 
-                            if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL] != null)
+                            if (Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL] != null)
                             {
-                                 if (this.Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                                if (Permissions[CNST_ALL][CNST_ALL][pPermission][CNST_ALL].Contains(pOperation)) return true;
                             }
                             //If the hashset of operation is null, we asume we don't filter by operation
                             else
@@ -701,10 +703,10 @@ namespace DotnetJwtTools
                             }
                         }
                     }
-                   
+
                     //Check if we have major permission
-                    foreach (var permission in this.Permissions[CNST_ALL][CNST_ALL])
-                    {                            
+                    foreach (var permission in Permissions[CNST_ALL][CNST_ALL])
+                    {
                         if (permission.Key.StartsWith(CNST_CRUD) || permission.Key.Equals(CNST_ADMIN))
                         {
                             foreach (string group in pGroups)
@@ -714,9 +716,9 @@ namespace DotnetJwtTools
                                 {
                                     if (!checkOperation) return true;
 
-                                    if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][group] != null)
+                                    if (Permissions[CNST_ALL][CNST_ALL][permission.Key][group] != null)
                                     {
-                                        if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][group].Contains(pOperation)) return true;
+                                        if (Permissions[CNST_ALL][CNST_ALL][permission.Key][group].Contains(pOperation)) return true;
                                     }
                                     //If the hashset of operation is null, we asume we don't filter by operation
                                     else
@@ -731,37 +733,37 @@ namespace DotnetJwtTools
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL] != null)
+                                if (Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL] != null)
                                 {
-                                    if (this.Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation)) return true;
+                                    if (Permissions[CNST_ALL][CNST_ALL][permission.Key][CNST_ALL].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
                                 {
                                     return true;
                                 }
-                            }                                
+                            }
                         }
                     }
-                    
+
                 }
                 //Check for concrete object
                 else
                 {
-                    if (this.Permissions[CNST_ALL].ContainsKey(pObj))
+                    if (Permissions[CNST_ALL].ContainsKey(pObj))
                     {
-                        if (this.Permissions[CNST_ALL][pObj].ContainsKey(pPermission))
+                        if (Permissions[CNST_ALL][pObj].ContainsKey(pPermission))
                         {
                             foreach (string group in pGroups)
                             {
                                 //Check if we have the group
-                                if (this.Permissions[CNST_ALL][pObj][pPermission].ContainsKey(group))
+                                if (Permissions[CNST_ALL][pObj][pPermission].ContainsKey(group))
                                 {
                                     if (!checkOperation) return true;
 
-                                    if (this.Permissions[CNST_ALL][pObj][pPermission][group] != null)
+                                    if (Permissions[CNST_ALL][pObj][pPermission][group] != null)
                                     {
-                                        if (this.Permissions[CNST_ALL][pObj][pPermission][group].Contains(pOperation)) return true;
+                                        if (Permissions[CNST_ALL][pObj][pPermission][group].Contains(pOperation)) return true;
                                     }
                                     //If the hashset of operation is null, we asume we don't filter by operation
                                     else
@@ -772,13 +774,13 @@ namespace DotnetJwtTools
                             }
 
                             //Check if we have the all
-                            if (this.Permissions[CNST_ALL][pObj][pPermission].ContainsKey(CNST_ALL))
+                            if (Permissions[CNST_ALL][pObj][pPermission].ContainsKey(CNST_ALL))
                             {
                                 if (!checkOperation) return true;
 
-                                if (this.Permissions[CNST_ALL][pObj][pPermission][CNST_ALL] != null)
+                                if (Permissions[CNST_ALL][pObj][pPermission][CNST_ALL] != null)
                                 {
-                                    if (this.Permissions[CNST_ALL][pObj][pPermission][CNST_ALL].Contains(pOperation)) return true;
+                                    if (Permissions[CNST_ALL][pObj][pPermission][CNST_ALL].Contains(pOperation)) return true;
                                 }
                                 //If the hashset of operation is null, we asume we don't filter by operation
                                 else
@@ -787,9 +789,9 @@ namespace DotnetJwtTools
                                 }
                             }
                         }
-                      
+
                         //Check if we have major permission
-                        foreach (var permission in this.Permissions[CNST_ALL][pObj])
+                        foreach (var permission in Permissions[CNST_ALL][pObj])
                         {
                             if (permission.Key.StartsWith(CNST_CRUD) || permission.Key.Equals(CNST_ADMIN))
                             {
@@ -800,9 +802,9 @@ namespace DotnetJwtTools
                                     {
                                         if (!checkOperation) return true;
 
-                                        if (this.Permissions[CNST_ALL][pObj][permission.Key][group] != null)
+                                        if (Permissions[CNST_ALL][pObj][permission.Key][group] != null)
                                         {
-                                            if (this.Permissions[CNST_ALL][pObj][permission.Key][group].Contains(pOperation)) return true;
+                                            if (Permissions[CNST_ALL][pObj][permission.Key][group].Contains(pOperation)) return true;
                                         }
                                         //If the hashset of operation is null, we asume we don't filter by operation
                                         else
@@ -817,9 +819,9 @@ namespace DotnetJwtTools
                                 {
                                     if (!checkOperation) return true;
 
-                                    if (this.Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL] != null)
+                                    if (Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL] != null)
                                     {
-                                        if (this.Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL].Contains(pOperation)) return true;
+                                        if (Permissions[CNST_ALL][pObj][permission.Key][CNST_ALL].Contains(pOperation)) return true;
                                     }
                                     //If the hashset of operation is null, we asume we don't filter by operation
                                     else
@@ -829,7 +831,7 @@ namespace DotnetJwtTools
                                 }
                             }
                         }
-                      
+
                     }
                 }
             }
@@ -850,24 +852,24 @@ namespace DotnetJwtTools
         public bool AddPermission(string pProduct, string pObj, string pPermission, string pGroup)
         {
             //--- Check if Permissions is not null ----------------
-            if (this.Permissions == null)
-                this.Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
+            if (Permissions == null)
+                Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
 
             //--- Check if we have the product -----------
-            if (!this.Permissions.ContainsKey(pProduct))
-                this.Permissions.Add(pProduct, new Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>());
+            if (!Permissions.ContainsKey(pProduct))
+                Permissions.Add(pProduct, new Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>());
 
             //--- Check if we have the object ------------
-            if (!this.Permissions[pProduct].ContainsKey(pObj))
-                this.Permissions[pProduct].Add(pObj, new Dictionary<string, Dictionary<string, HashSet<string>>>());
+            if (!Permissions[pProduct].ContainsKey(pObj))
+                Permissions[pProduct].Add(pObj, new Dictionary<string, Dictionary<string, HashSet<string>>>());
 
             //--- Check if we have the permission --------
-            if (!this.Permissions[pProduct][pObj].ContainsKey(pPermission))
-                this.Permissions[pProduct][pObj].Add(pPermission, new Dictionary<string, HashSet<string>>());
+            if (!Permissions[pProduct][pObj].ContainsKey(pPermission))
+                Permissions[pProduct][pObj].Add(pPermission, new Dictionary<string, HashSet<string>>());
 
             //--- Check if we have the group -------------
-            if (!this.Permissions[pProduct][pObj][pPermission].ContainsKey(pGroup))
-                this.Permissions[pProduct][pObj][pPermission].Add(pGroup, null);
+            if (!Permissions[pProduct][pObj][pPermission].ContainsKey(pGroup))
+                Permissions[pProduct][pObj][pPermission].Add(pGroup, null);
 
             return true;
         }
@@ -884,17 +886,17 @@ namespace DotnetJwtTools
         public bool AddPermission(string pProduct, string pObj, string pPermission, string pGroup, string pOperation)
         {
             //Add StandardPermission
-            this.AddPermission(pProduct, pObj, pPermission, pGroup);
-            
+            AddPermission(pProduct, pObj, pPermission, pGroup);
+
             //Initialize hashset of operations if we dont have any, and add operation 
-            if (this.Permissions[pProduct][pObj][pPermission][pGroup] == null)
+            if (Permissions[pProduct][pObj][pPermission][pGroup] == null)
             {
-                this.Permissions[pProduct][pObj][pPermission][pGroup] = new HashSet<string>();
+                Permissions[pProduct][pObj][pPermission][pGroup] = new HashSet<string>();
             }
 
-            if (!this.Permissions[pProduct][pObj][pPermission][pGroup].Contains(pOperation))
+            if (!Permissions[pProduct][pObj][pPermission][pGroup].Contains(pOperation))
             {
-                this.Permissions[pProduct][pObj][pPermission][pGroup].Add(pOperation);
+                Permissions[pProduct][pObj][pPermission][pGroup].Add(pOperation);
             }
 
             return true;
