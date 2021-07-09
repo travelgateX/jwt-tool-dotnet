@@ -16,6 +16,7 @@ namespace DotnetJwtTools
     {
         #region PUBLIC KEY AUTH0
         private static string CNST_PUBLIC_KEY = "-----BEGIN CERTIFICATE-----MIIC6DCCAdCgAwIBAgIJHWgMlgDhBwcLMA0GCSqGSIb3DQEBBQUAMBsxGTAXBgNVBAMTEHh0Zy5ldS5hdXRoMC5jb20wHhcNMTYxMjA4MjIyMjQyWhcNMzAwODE3MjIyMjQyWjAbMRkwFwYDVQQDExB4dGcuZXUuYXV0aDAuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwClsy/seBHmPeYm+Y53UZJG4vBGdRkG9boqkIp9E4U0kE34BDYm/qjJm/hng+sJjyHwGTlgI/2Vv9aDM1cd2TgXuUN4DvNOXsw0UEtM42HFiGoaFQupNbYXHJbHVse3ai8RtQoH1uf3pT21GMw8VdewfNfD7gjd465t0CaPCEUcJzwIJBxdCGOoxmUO6XlrBfy4amJndLrzmmKncJ4FbLMYGuqvjpp/14St2KPobPDfOSlorb50Don0mlvFey5wNW49ISaOYtqOQqZNFcWgEiNXelneVWL1Lnwbaigp79jWN0clikGQ1/+3izMC2+uEY6J4GLVHO9NXivQXrroKYfQIDAQABoy8wLTAMBgNVHRMEBTADAQH/MB0GA1UdDgQWBBQYLV04ndhtuHsYaWyFL3HEmVRJ+jANBgkqhkiG9w0BAQUFAAOCAQEAogs6rdio/sJrbXbizLEiHo4dEg3vq5WtkdgbDWmOqA0C6NE4JGDI+C52AJ3GJFYIVG+6uMCClDNWWJyXTbwzrBgGSeebZJyYGa/HzJDUkSOXzc6b6nBV3+seTIUOnCNZLNDUHwIO9xJMs1yadQ0v9guXrFft7LN1V3pFM/4B3RyEQtWsXjdjD+xWazlxcWxEAZaWLdDdfs5KOT8xi7k3O+UpjeE+zjDXq+hFM9hK46xuTAd9USJYpzKG8dBcaHZ9e7JVxiINww4KTrO0l9LqUrIeMngK0MlS+DGog7S95ul5yX6XwYFy4FS35fh/qTAEg1jjwJ+oI+LaYwyNKnwl5g==-----END CERTIFICATE-----";
+        private static byte[] CNST_PK = Convert.FromBase64String(@"MIIC6DCCAdCgAwIBAgIJHWgMlgDhBwcLMA0GCSqGSIb3DQEBBQUAMBsxGTAXBgNVBAMTEHh0Zy5ldS5hdXRoMC5jb20wHhcNMTYxMjA4MjIyMjQyWhcNMzAwODE3MjIyMjQyWjAbMRkwFwYDVQQDExB4dGcuZXUuYXV0aDAuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwClsy/seBHmPeYm+Y53UZJG4vBGdRkG9boqkIp9E4U0kE34BDYm/qjJm/hng+sJjyHwGTlgI/2Vv9aDM1cd2TgXuUN4DvNOXsw0UEtM42HFiGoaFQupNbYXHJbHVse3ai8RtQoH1uf3pT21GMw8VdewfNfD7gjd465t0CaPCEUcJzwIJBxdCGOoxmUO6XlrBfy4amJndLrzmmKncJ4FbLMYGuqvjpp/14St2KPobPDfOSlorb50Don0mlvFey5wNW49ISaOYtqOQqZNFcWgEiNXelneVWL1Lnwbaigp79jWN0clikGQ1/+3izMC2+uEY6J4GLVHO9NXivQXrroKYfQIDAQABoy8wLTAMBgNVHRMEBTADAQH/MB0GA1UdDgQWBBQYLV04ndhtuHsYaWyFL3HEmVRJ+jANBgkqhkiG9w0BAQUFAAOCAQEAogs6rdio/sJrbXbizLEiHo4dEg3vq5WtkdgbDWmOqA0C6NE4JGDI+C52AJ3GJFYIVG+6uMCClDNWWJyXTbwzrBgGSeebZJyYGa/HzJDUkSOXzc6b6nBV3+seTIUOnCNZLNDUHwIO9xJMs1yadQ0v9guXrFft7LN1V3pFM/4B3RyEQtWsXjdjD+xWazlxcWxEAZaWLdDdfs5KOT8xi7k3O+UpjeE+zjDXq+hFM9hK46xuTAd9USJYpzKG8dBcaHZ9e7JVxiINww4KTrO0l9LqUrIeMngK0MlS+DGog7S95ul5yX6XwYFy4FS35fh/qTAEg1jjwJ+oI+LaYwyNKnwl5g==");
         #endregion
 
         public bool IsError = false;
@@ -105,11 +106,11 @@ namespace DotnetJwtTools
         #region JWT Validation
         private static bool _ValidateJwtToken(string pJwt)
         {
-            //var certificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(System.Text.Encoding.ASCII.GetBytes(CNST_PUBLIC_KEY));
-            X509Certificate2 DefaultCert_Public_2048 = new X509Certificate2(System.Text.Encoding.ASCII.GetBytes(CNST_PUBLIC_KEY));
+            //X509Certificate2 DefaultCert_Public_2048 = new X509Certificate2(System.Text.Encoding.ASCII.GetBytes(CNST_PUBLIC_KEY));
+            X509Certificate2 DefaultCert_Public_2048 = new X509Certificate2(CNST_PK);
             X509SecurityKey DefaultX509Key_Public_2048 = new X509SecurityKey(DefaultCert_Public_2048);
 
-            SigningCredentials credentials = new SigningCredentials(DefaultX509Key_Public_2048, SecurityAlgorithms.RsaSha256Signature);
+            //SigningCredentials credentials = new SigningCredentials(DefaultX509Key_Public_2048, SecurityAlgorithms.RsaSha256Signature);
 
             TokenValidationParameters validationParameters = new TokenValidationParameters
             {
