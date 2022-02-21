@@ -43,6 +43,7 @@ namespace DotnetJwtTools
         public HashSet<string> ExtraNode { get; set; }
         public HashSet<string> IamProducts { get; set; }
         public bool IsBearer { get; set; } = false;
+        public Dictionary<string, GroupTree> PTree { get; set; }
 
         public JwtTools(string pBearer, string pAdminGroup, string pJwtIamName, string pExtraValuePath = null)
         {
@@ -91,7 +92,8 @@ namespace DotnetJwtTools
 
                     IsAdmin = false;
                     Permissions = new Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, HashSet<string>>>>>();
-                    _BuildPermissions(new List<Jwt> { jwt }, new Dictionary<string, GroupTree>(), pAdminGroup);
+                    PTree = new Dictionary<string, GroupTree>();
+                    _BuildPermissions(new List<Jwt> { jwt }, PTree, pAdminGroup);
                 }
             }
             catch (Exception e)
